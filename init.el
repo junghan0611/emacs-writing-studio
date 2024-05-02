@@ -622,6 +622,6 @@
   :bind
   ("C-x r D" . bookmark-delete))
 
-
-(load-file (concat (file-name-as-directory user-emacs-directory) "meow.el"))
+;; (load-file (concat (file-name-as-directory user-emacs-directory) "meow.el"))
+(load-file (concat (file-name-as-directory user-emacs-directory) "evil.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "extra.el"))
