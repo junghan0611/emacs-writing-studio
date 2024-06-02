@@ -668,6 +668,11 @@
   :bind
   ("C-x r D" . bookmark-delete))
 
+(use-package hydra :ensure t)
+(use-package major-mode-hydra :ensure t)
+(use-package pretty-hydra :ensure t)
+
 ;; (load-file (concat (file-name-as-directory user-emacs-directory) "meow.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "evil.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "extra.el"))
+(load-file (concat (file-name-as-directory user-emacs-directory) "hydrakeys.el"))
