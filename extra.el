@@ -94,4 +94,64 @@
   (mapc #'disable-theme custom-enabled-themes))
 (advice-add #'load-theme :before #'load-theme@theme-dont-propagate)
 
+;;; ox-hugo
+
+(use-package ox-hugo
+  :ensure t
+  :after org
+  :config
+  ;; (setq org-hugo-base-dir (file-truename "~/git/blog/"))
+  (setq org-hugo-base-dir "~/git/blog/")
+
+  ;; (setq org-hugo-auto-set-lastmod t
+  ;;       org-hugo-suppress-lastmod-period 43200.0)
+
+  (setq org-hugo-front-matter-format 'yaml)
+
+  (setq org-hugo-section "blog") ; 2024-04-26 change
+  (setq org-hugo-paired-shortcodes "mermaid callout cards details tabs") ; hint sidenote
+
+  ;; https://ox-hugo.scripter.co/doc/formatting/
+  ;; if org-hugo-use-code-for-kbd is non-nil
+  ;; Requires CSS to render the <kbd> tag as something special.
+  ;; eg: ~kbd~
+  ;; (setq org-hugo-use-code-for-kbd t)
+
+  ;; https://ox-hugo.scripter.co/doc/linking-numbered-elements/
+
+  ;; org-export-dictionary 에 Figure, Table 에 한글 번역을 넣으면
+  ;; 한글로 바뀌어 export 될 것이다.
+  (setq org-hugo-link-desc-insert-type t)
+
+  ;; 내보낼 때는 fill-column 끈다.
+  (setq org-hugo-preserve-filling nil) ; important
+
+  (setq org-hugo-allow-spaces-in-tags t) ; default t
+  (setq org-hugo-prefer-hyphen-in-tags t) ; default t
+
+  ;; Assume all static files are images for now otherwise this
+  ;; defaults to /ox-hugo/mypicture.png which is ugly
+  (setq org-hugo-default-static-subdirectory-for-externals "images") ; imgs
+
+  ;; Override the default `org-hugo-export-creator-string' so that this
+  ;; string is consistent in all ox-hugo tests.
+  (setq org-hugo-export-creator-string "Emacs + Org mode + ox-hugo")
+
+  ;; In that normal example of the sidenote, ox-hugo trims the whitespace around
+  ;; the sidenote block. That is configured by customizing the
+  ;; org-hugo-special-block-type-properties variable:
+  (progn
+    (add-to-list 'org-hugo-special-block-type-properties '("mermaid" :raw t))
+    (add-to-list 'org-hugo-special-block-type-properties '("callout" :raw t))
+    (add-to-list 'org-hugo-special-block-type-properties '("cards" :raw t))
+    (add-to-list 'org-hugo-special-block-type-properties '("details" :raw t))
+    )
+  ;; (add-to-list 'org-hugo-special-block-type-properties '("sidenote" . (:trim-pre t :trim-post t)))
+
+  ;; If this property is set to an empty string, this heading will not be auto-inserted.
+  ;; default value is 'References'
+  ;; https://ox-hugo.scripter.co/doc/org-cite-citations/
+  (plist-put org-hugo-citations-plist :bibliography-section-heading "References")
+  )
+
 ;;; extra.el ends here
