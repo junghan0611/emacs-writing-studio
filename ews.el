@@ -32,7 +32,9 @@
 ;;
 ;;; Code:
 
+
 ;; Emacs Writing Studio Customisation
+
 (defvar ews-home-directory
   (file-name-as-directory (getenv "HOME"))
   "Location of documents.")
@@ -86,14 +88,15 @@ Use when adding or removing a BibTeX file from or to `ews-bibtex-directory`."
 				      "^[A-Z|a-z|0-9].+.bib$")))
       (setq ews-bibtex-files bib-files
   	    org-cite-global-bibliography bib-files
-	    citar-bibliography bib-files))))
+	    citar-bibliography bib-files)))
+  (message "Registered:\n%s" (mapconcat #'identity ews-bibtex-files "\n")))
 
 (defun ews--bibtex-combined-biblio-lookup ()
   "Combines biblio-lookup and biblio-doi-insert-bibtex."
   (let* ((dbs (biblio--named-backends))
          (db-list (append dbs '(("DOI" . biblio-doi-backend))))
          (db-selected (biblio-completing-read-alist
-                       "Database:"
+                       "Backend:"
                        db-list)))
     (if (eq db-selected 'biblio-doi-backend)
         (let ((doi (read-string "DOI: ")))
@@ -110,7 +113,8 @@ Use when adding or removing a BibTeX file from or to `ews-bibtex-directory`."
 	   (bibfile (cond ((eq bibfiles 1) (car ews-bibtex-files))
 			  ((equal major-mode 'bibtex-mode)
 			   (buffer-file-name))
-			  (t (completing-read "Select BibTeX file:" ews-bibtex-files)))))
+			  (t (completing-read
+			      "Select BibTeX file:" ews-bibtex-files)))))
       (progn (find-file bibfile)
 	     (goto-char (point-max))
 	     (ews--bibtex-combined-biblio-lookup)
@@ -250,7 +254,4 @@ current note."
     (insert (format "#+caption: %s\n" (read-from-minibuffer "Caption: ")))
     (insert (format "[[file:%s]]" filename))
     (org-redisplay-inline-images)))
-
-(provide 'ews)
-;;; ews.el ends here
 
