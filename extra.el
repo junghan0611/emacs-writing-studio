@@ -19,7 +19,77 @@
 ;;
 ;;; Code:
 
-;;;; Hangul Korean
+;;; which-key
+
+(setq which-key-idle-delay 0.4
+      which-key-idle-secondary-delay 0.01
+      which-key-ellipsis ".."
+      which-key-allow-multiple-replacements nil
+      which-key-use-C-h-commands t)
+
+;;; fringe
+
+(when (display-graphic-p) ;; gui
+  (set-fringe-mode 10) ;; Give some breathing room
+  (pixel-scroll-precision-mode 1) ; default nil
+  )
+
+;;; dired
+
+(with-eval-after-load 'dired
+  (setq dired-make-directory-clickable t) ; Emacs 29.1, doom t
+  (setq dired-free-space nil) ; Emacs 29.1, doom first
+
+  ;; Better dired flags:
+  ;; `-l' is mandatory
+  ;; `-a' shows all files
+  ;; `-h' uses human-readable sizes
+  ;; `-F' appends file-type classifiers to file names (for better highlighting)
+  ;; -g     like -l, but do not list owner
+  (setq dired-listing-switches "-AGFhgv --group-directories-first --time-style=long-iso") ;; doom "-ahl -v --group-directories-first"
+  (setq dired-recursive-copies 'always ; doom 'always
+        dired-dwim-target t) ; doom t
+  (setq dired-ls-F-marks-symlinks t ; doom nil -F marks links with @
+        delete-by-moving-to-trash t) ; doom nil
+
+  (setq dired-use-ls-dired t)  ; doom t
+  (setq dired-do-revert-buffer t) ; doom nil
+  (setq dired-kill-when-opening-new-dired-buffer t) ; doom nil
+  (setq dired-clean-confirm-killing-deleted-buffers t) ; doom nil
+
+  (require 'wdired)
+  (setq wdired-allow-to-change-permissions t) ; doom nil
+  (setq wdired-create-parent-directories t)
+
+  (add-hook 'dired-mode-hook
+            (lambda ()
+              (interactive)
+              (setq-local truncate-lines t) ; Do not wrap lines
+              ;; (visual-line-mode -1)
+              (hl-line-mode 1)))
+  (add-hook 'dired-mode-hook 'dired-hide-details-mode)
+  (remove-hook 'dired-mode-hook 'dired-omit-mode)
+
+  )
+
+;;;; dired-preview
+
+(use-package dired-preview
+  :after dired
+  :commands dired-preview
+  :init
+  (setq dired-preview-delay 0.7)
+  (setq dired-preview-max-size (expt 2 20)) ;; => 1048576
+  (defun my-dired-preview-to-the-right ()
+    "My preferred `dired-preview-display-action-alist-function'."
+    '((display-buffer-in-side-window)
+      (side . right)
+      (width . 0.3)))
+  ;; default' dired-preview-display-action-alist-dwim
+  (setq dired-preview-display-action-alist-function #'my-dired-preview-to-the-right)
+  )
+
+;;; Hangul Korean
 
 (setq default-input-method "korean-hangul")
 (set-language-environment "Korean")
@@ -168,5 +238,176 @@
              nerd-icons-ipsicon
              nerd-icons-pomicon
              nerd-icons-powerline))
+
+(use-package nerd-icons-dired)
+(use-package nerd-icons-completion)
+
+(when (display-graphic-p) ; gui
+  (add-hook 'dired-mode-hook 'nerd-icons-dired-mode)
+  (nerd-icons-completion-mode))
+
+;;; core
+
+(use-package hydra :ensure t)
+(use-package major-mode-hydra :ensure t)
+(use-package pretty-hydra :ensure t)
+;; (use-package pcre2el :init (require 'pcre2el))
+;; (use-package doom-modeline :demand t)
+
+(use-package puni
+  :diminish ""
+  :hook ((puni-mode  . electric-pair-mode)
+         (prog-mode  . puni-mode))
+  :init
+  ;; The default `puni-mode-map' respects "Emacs conventions".  We don't, so
+  ;; it's better to simply clear and rewrite it.
+  (setcdr puni-mode-map nil)
+  (bind-keys
+   :map puni-mode-map
+
+   ;; ("M-<backspace>" . puni-splice)
+   ("M-<delete>" . puni-splice) ; sp-unwrap-sexp
+
+   ("C-<right>"  .  puni-slurp-forward)
+   ("C-<left>" . puni-barf-forward)
+
+   ("C-M-<left>" .  puni-slurp-backward)
+   ("C-M-<right>" . puni-barf-backward)
+
+   ("C-M-<delete>" . puni-splice-killing-forward)
+   ("C-M-<backspace>" . puni-splice-killing-backward)
+
+   ("C-M-a" . beginning-of-defun) ; default
+   ("C-M-e" . end-of-defun)
+   ("M-]" . forward-sexp) ; default
+   ("M-[" . backward-sexp)
+
+   ("C-M-f" . puni-forward-sexp)
+   ("C-M-b" . puni-backward-sexp)
+
+   ("C-M-p" . puni-beginning-of-sexp)
+   ("C-M-n" . puni-end-of-sexp)
+
+   ;; C-M-d down-sexp
+   ("C-M-t" . transpose-sexp)
+   ("C-M-?" . puni-convolute)
+
+   ("C-M-k" . kill-sexp)
+   ("C-M-K"   . backward-kill-sexp)
+   ;; ("C-" . puni-backward-kill-word)
+
+   ("M-)" . puni-syntactic-forward-punct)
+   ("M-(" . puni-syntactic-backward-punct)
+
+   ("C-c DEL" . puni-force-delete)
+   ;; ("C-M-d" . puni-forward-delete-char)
+   ;; ("C-M-k" . puni-kill-line)
+   ;; ("C-M-K" . puni-backward-kill-line)
+   ;;  ("C-M-w" . puni-kill-region)
+
+   ;; ([remap puni-backward-kill-word] . backward-kill-word)
+   ("C-M-z" . puni-squeeze) ; unwrap
+
+   ("C-c {" . puni-wrap-curly)
+   ("C-c (" . puni-wrap-round)
+   ("C-c [" . puni-wrap-square)
+   )
+  )
+
+
+;;; shackle
+
+(use-package shackle
+  :init
+  (setq shackle-default-size 0.4
+        shackle-rules `(
+                        ;; (help-mode                       :select t :align right :size ,fill-column)
+                        ;; (helpful-mode                    :select t :align right :size ,fill-column)
+
+                        ;; select nil 일 때, 'q' 로 바로 닫을 수 있다.
+                        (help-mode                       :select nil :align t)
+                        (helpful-mode                    :select nil :align t)
+
+                        ("*Messages*"                    :select nil :align t)
+                        ("*eldoc*"                       :align t)
+                        (special-mode                    :align t)
+                        (process-menu-mode               :align t)
+                        (compilation-mode                :align t)
+                        (flymake-diagnostics-buffer-mode :align t)
+                        ("*Shell Command Output*"        :align t)
+                        ("*Async Shell Command*"         :align t)
+                        ("\\*EGLOT.*"                    :select t :align right :size ,fill-column :regexp t)))
+
+  (add-hook 'after-init-hook 'shackle-mode)
+  )
+;;; popper
+
+(use-package popper
+  :ensure t
+  :init
+  (setq popper-echo-dispatch-keys '(?q ?w ?e ?r ?t ?y ?u ?i ?o ?p))
+  (setq popper-display-control nil) ; use popwin and display-buffer-alist
+  :config
+  (setq popper-reference-buffers
+        '("\\*Messages\\*"
+          ;; "Output\\*$"
+          "*cider-error*"
+          ;; "*cider-doc*"
+          ;; "^\\*eldoc for"
+          "\\*Async-native-compile-log\\*" ; JH
+          "^\\*EGLOT" ; JH
+          ;; treemacs-mode ; JH
+          "*Go-Translate*" ; JH
+          "*wordreference*" ; JH
+          "*tmr-tabulated-view*" ; JH
+          "*SDCV*" ; JH
+          "*Dogears List*" ; JH
+          "^\\*Backtrace\\*"
+          "*Hammy Log*"
+          ;; "*eww*"
+          "*lsp-documentation*"
+          "*devdocs-javascript*"
+          ;; zk-index-mode
+          help-mode
+          telega-chat-mode
+          helpful-mode
+          compilation-mode
+          process-menu-mode
+          special-mode
+          eww-mode
+          ;; "*Emacs Log*"
+          ;; "*command-log*" ; JH
+          flymake-diagnostics-buffer-mode))
+  (add-to-list
+   'popper-reference-buffers
+   '(("^\\*Warnings\\*$" . hide)
+     ("^\\*Compile-Log\\*$" . hide)
+     "^\\*Matlab Help.*\\*$"
+     "^\\*Messages\\*$"
+     ("*typst-ts-compilation*" . hide)
+     ("^\\*dash-docs-errors\\*$" . hide)
+     "^\\*evil-registers\\*"
+     "^\\*Apropos"
+     "^Calc:"
+     "^\\*eldoc\\*"
+     "^\\*TeX errors\\*"
+     "^\\*ielm\\*"
+     "^\\*TeX Help\\*"
+     "^\\*ChatGPT\\*"
+     "^\\*gptel-quick\\*"
+     "^\\*define-it:"
+     "\\*Shell Command Output\\*"
+     "\\*marginal notes\\*"
+     ("\\*Async Shell Command\\*" . hide)
+     "\\*Completions\\*"
+     "[Oo]utput\\*"))
+
+  ;; (global-set-key (kbd "C-`") 'popper-toggle)
+  ;; (global-set-key (kbd "C-~") 'popper-kill-latest-popup)
+  ;; (global-set-key (kbd "M-`") 'popper-cycle)
+  ;; (global-set-key (kbd "C-M-`") 'popper-toggle-type)
+  (popper-mode +1)
+  (popper-echo-mode +1)
+  )
 
 ;;; extra.el ends here

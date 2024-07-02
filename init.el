@@ -110,11 +110,11 @@
 
 ;; Spacious padding
 
-(use-package spacious-padding
-  :custom
-  (line-spacing 3)
-  :init
-  (spacious-padding-mode 1))
+;; (use-package spacious-padding
+;;   :custom
+;;   (line-spacing 3)
+;;   :init
+;;   (spacious-padding-mode 1))
 
 ;; Modus Themes
 
@@ -729,12 +729,32 @@
   :bind
   ("C-x r D" . bookmark-delete))
 
-(use-package hydra :ensure t)
-(use-package major-mode-hydra :ensure t)
-(use-package pretty-hydra :ensure t)
-
 ;; (load-file (concat (file-name-as-directory user-emacs-directory) "meow.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "evil.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "extra.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "hydrakeys.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "keys.el"))
+
+;;; corkey bindings
+
+(dolist (dir '("corkey" "corgi-bindings"))
+  (push (expand-file-name dir user-emacs-directory) load-path))
+
+(load-file (concat (file-name-as-directory user-emacs-directory) "core-funcs.el"))
+
+(message "Loading corgi-bindings...")
+(require 'corgi-bindings)
+
+;; Corgi's keybinding system, which builds on top of Evil. See the manual, or
+;; visit the key binding and signal files (with `SPC f e k', `SPC f e K', `SPC
+;; f e s' `SPC f e S')
+;; Put this last here, otherwise keybindings for commands that aren't loaded
+;; yet won't be active.
+
+(message "Loading corkey...")
+(require 'corkey)
+(corkey-mode 1)
+;; Automatically pick up keybinding changes
+(corkey/load-and-watch)
+
+;;; init.el ends here
