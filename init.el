@@ -85,7 +85,7 @@
 ;; - git: Version control
 
 (ews-missing-executables
- '("soffice" "zip" "pdftotext" "ddjvu"
+ '("soffice" "zip" "pdftotext" ;; "ddjvu"
    "curl"
    "dvipng"
    "dot"
@@ -737,3 +737,4 @@
 (load-file (concat (file-name-as-directory user-emacs-directory) "evil.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "extra.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "hydrakeys.el"))
+(load-file (concat (file-name-as-directory user-emacs-directory) "keys.el"))

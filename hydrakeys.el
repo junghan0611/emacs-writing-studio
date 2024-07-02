@@ -13,23 +13,8 @@
 
 ;;; Code:
 
+
 ;;; Global-Hydra
-
-(global-unset-key (kbd "<f1>"))  ; unset f1
-(global-unset-key (kbd "<f2>"))
-(global-unset-key (kbd "M-c"))  ; unset capitalize-word
-
-(global-set-key (kbd "<f1>") 'hydra-all/body)
-(global-set-key (kbd "s-s") 'hydra-all/body)
-(global-set-key (kbd "M-g 1") 'hydra-jump-to-directory/body)
-(global-set-key (kbd "M-g 2") 'hydra-jump-to-files/body)
-(global-set-key (kbd "M-g b") 'hydra-bm/body)
-
-(global-set-key (kbd "M-c") 'major-mode-hydra)
-(global-set-key (kbd "<f2>") 'major-mode-hydra)
-
-;; 확실한 이지 가이드가 된다.
-
 ;;;; Header
 
 ;; define everything here
@@ -462,6 +447,7 @@
             )
     ))
 
+
 ;;; Major-Mode-Hydra : 'F2' or 'M-c'
 
 ;;;; Major-Mode-Hydra > Load
@@ -603,5 +589,6 @@
                ("q" nil "Quit" :color red :exit t)
                ("M-c" nil "Quit" :color red :exit t)
                )))
+
 
 ;;; end-of

@@ -154,4 +154,19 @@
   (plist-put org-hugo-citations-plist :bibliography-section-heading "References")
   )
 
+;;; nerd-icons
+
+(use-package nerd-icons
+  :ensure t
+  :commands (nerd-icons-octicon
+             nerd-icons-faicon
+             nerd-icons-flicon
+             nerd-icons-wicon
+             nerd-icons-mdicon
+             nerd-icons-codicon
+             nerd-icons-devicon
+             nerd-icons-ipsicon
+             nerd-icons-pomicon
+             nerd-icons-powerline))
+
 ;;; extra.el ends here
