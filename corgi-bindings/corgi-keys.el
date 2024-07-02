@@ -120,7 +120,7 @@
     ("b" "Switch to project buffer" :project/switch-buffer))
 
    ("g" "Git"
-    ("s" "Magit Status" magit-status))
+    ("g" "Magit Status" magit-status))
 
    ("h" "Help"
     ("d" "Describe"

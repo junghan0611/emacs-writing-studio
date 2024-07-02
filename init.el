@@ -124,9 +124,9 @@
   (modus-themes-bold-constructs t)
   (modus-themes-mixed-fonts t)
   (modus-themes-to-toggle
-   '(modus-operandi-tinted modus-vivendi-tinted))
+   '(modus-operandi modus-vivendi-tinted))
   :init
-  (load-theme 'modus-operandi-tinted :no-confirm)
+  (load-theme 'modus-operandi :no-confirm)
   :bind
   (("C-c w t t" . modus-themes-toggle)
    ("C-c w t m" . modus-themes-select)
@@ -336,12 +336,12 @@
   (("C-c w b o" . citar-open)))
 
 (use-package citar-embark
-:after citar embark
-:no-require
-:config (citar-embark-mode)
-:bind (("C-M-." . embark-act)
-       :map citar-embark-citation-map
-       ("c" . citar-denote-find-citation)))
+  :after citar embark
+  :no-require
+  :config (citar-embark-mode)
+  :bind (("C-M-." . embark-act)
+	 :map citar-embark-citation-map
+	 ("c" . citar-denote-find-citation)))
 
 ;; Read RSS feeds with Elfeed
 
@@ -361,7 +361,7 @@
   :custom
   (rmh-elfeed-org-files
    (list (concat (file-name-as-directory
-              (getenv "HOME"))
+		  (getenv "HOME"))
                  "Documents/elfeed.org"))))
 
 ;; Easy insertion of weblinks
@@ -405,20 +405,20 @@
 ;; Capture templates
 
 (setq org-capture-templates
- '(("f" "Fleeting note"
-    item
-    (file+headline org-default-notes-file "Notes")
-    "- %?")
-   ("p" "Permanent note" plain
-    (file denote-last-path)
-    #'denote-org-capture
-    :no-save t
-    :immediate-finish nil
-    :kill-buffer t
-    :jump-to-captured t)
-   ("t" "New task" entry
-    (file+headline org-default-notes-file "Tasks")
-    "* TODO %i%?")))
+      '(("f" "Fleeting note"
+	 item
+	 (file+headline org-default-notes-file "Notes")
+	 "- %?")
+	("p" "Permanent note" plain
+	 (file denote-last-path)
+	 #'denote-org-capture
+	 :no-save t
+	 :immediate-finish nil
+	 :kill-buffer t
+	 :jump-to-captured t)
+	("t" "New task" entry
+	 (file+headline org-default-notes-file "Tasks")
+	 "* TODO %i%?")))
 
 ;; Denote
 
@@ -550,8 +550,8 @@
   (("C-c w s d" . dictionary-lookup-definition)))
 
 (use-package powerthesaurus
-:bind
-(("C-c w s p" . powerthesaurus-transient)))
+  :bind
+  (("C-c w s p" . powerthesaurus-transient)))
 
 ;; Writegood-Mode for buzzwords, passive writing and repeated word detection
 
@@ -729,9 +729,60 @@
   :bind
   ("C-x r D" . bookmark-delete))
 
+;;; custom
+
+;; (unless (package-installed-p 'with-editor)
+;;   (package-vc-install "https://github.com/magit/with-editor"))
+(use-package with-editor)
+
+(use-package magit
+  :demand t
+  :commands (magit-status
+             magit-dispatch-popup
+             magit-blame-addition
+             magit-log-buffer-file)
+  :bind (("C-x g" . magit-status)
+         ("C-x M-g" . magit-dispatch-popup)))
+
+;; (use-package forge
+;;   :after magit)
+
+;;; outli
+
+(progn 
+  (unless (package-installed-p 'outli)
+    (package-vc-install "https://github.com/jdtsmith/outli"))
+
+  (require 'outli)
+  (setq outli-speed-commands nil)
+  ;; (add-to-list 'outli-heading-config '(tex-mode "%%" ?% t))
+  (add-to-list 'outli-heading-config '(js2-mode "//" ?\/ t))
+  (add-to-list 'outli-heading-config '(js-ts-mode "//" ?\/ t))
+  (add-to-list 'outli-heading-config '(typescript-mode "//" ?\/ t))
+  (add-to-list 'outli-heading-config '(typescript-ts-mode "//" ?\/ t))
+  (add-to-list 'outli-heading-config '(python-mode "##" ?# t))
+  (add-to-list 'outli-heading-config '(python-ts-mode "##" ?# t))
+  (add-to-list 'outli-heading-config '(awk-mode "##" ?# t))
+  (add-to-list 'outli-heading-config '(awk-ts-mode "##" ?# t))
+  (add-to-list 'outli-heading-config '(elixir-mode "##" ?# t))
+  (add-to-list 'outli-heading-config '(elixir-ts-mode "##" ?# t))
+  (add-to-list 'outli-heading-config '(sh-mode "##" ?# t))
+  (add-to-list 'outli-heading-config '(bash-ts-mode "##" ?# t))
+
+  (add-to-list 'outli-heading-config '(clojure-mode ";;" ?\; t))
+  (add-to-list 'outli-heading-config '(clojurescript-mode ";;" ?\; t))
+
+  (add-hook 'prog-mode-hook 'outli-mode) ; not markdown-mode!
+  ;; (add-hook 'org-mode-hook 'outli-mode)
+  )
+
+;;; load files
+
 ;; (load-file (concat (file-name-as-directory user-emacs-directory) "meow.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "evil.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "extra.el"))
+(load-file (concat (file-name-as-directory user-emacs-directory) "core-funcs.el"))
+
 (load-file (concat (file-name-as-directory user-emacs-directory) "hydrakeys.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "keys.el"))
 
@@ -739,8 +790,6 @@
 
 (dolist (dir '("corkey" "corgi-bindings"))
   (push (expand-file-name dir user-emacs-directory) load-path))
-
-(load-file (concat (file-name-as-directory user-emacs-directory) "core-funcs.el"))
 
 (message "Loading corgi-bindings...")
 (require 'corgi-bindings)
@@ -756,5 +805,23 @@
 (corkey-mode 1)
 ;; Automatically pick up keybinding changes
 (corkey/load-and-watch)
+
+;;; Default Workspaces
+
+(defun +my/open-workspaces ()
+  (interactive)
+  (when (= 1 (length (tab-bar-tabs)))
+    (tab-bar-new-tab)
+    (tab-bar-rename-tab "home" 1)
+    (tab-bar-rename-tab "time" 2)
+    (tab-bar-select-tab 2)
+    ;; (org-agenda nil "n")
+    (org-agenda-goto-today)
+    (delete-other-windows)
+    (tab-bar-select-tab 1)
+    )
+  )
+
+(+my/open-workspaces)
 
 ;;; init.el ends here

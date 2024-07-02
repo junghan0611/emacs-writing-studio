@@ -19,20 +19,30 @@
 ;;
 ;;; Code:
 
+;;; archives
+
+
 ;;; which-key
 
 (setq which-key-idle-delay 0.4
       which-key-idle-secondary-delay 0.01
-      which-key-ellipsis ".."
-      which-key-allow-multiple-replacements nil
-      which-key-use-C-h-commands t)
+      which-key-max-description-length 32
+      which-key-sort-order 'which-key-key-order-alpha
+      which-key-allow-evil-operators t)
 
 ;;; fringe
 
 (when (display-graphic-p) ;; gui
   (set-fringe-mode 10) ;; Give some breathing room
-  (pixel-scroll-precision-mode 1) ; default nil
+  (pixel-scroll-precision-mode 1) ;; default nil
   )
+
+;;; TODO diff-hl
+
+;; (use-package diff-hl
+;;   :config
+;;   (evil-set-initial-state 'diff-hl-show-hunk-posframe--transient-mode 'motion)
+;;   (global-diff-hl-mode))
 
 ;;; dired
 
@@ -248,6 +258,16 @@
 
 ;;; core
 
+(use-package expand-region
+  :ensure t
+  :commands (er/contract-region er/mark-symbol er/mark-word)
+  :config
+  ;; Easily navigate sillycased words
+  (global-subword-mode +1)
+  (setq expand-region-contract-fast-key "V"
+        expand-region-reset-fast-key "r"
+        expand-region-subword-enabled t))
+
 (use-package hydra :ensure t)
 (use-package major-mode-hydra :ensure t)
 (use-package pretty-hydra :ensure t)
@@ -409,5 +429,53 @@
   (popper-mode +1)
   (popper-echo-mode +1)
   )
+
+
+;;; tab-bar
+
+;; (use-package tab-bar
+;;   :ensure nil
+;;   :config
+;;   ;; Disable the "numeric argument". When used, I use the =C-u= prefix.
+;;   ;; (dolist (prefix '("C-"))
+;;   ;;  (global-unset-key (kbd (concat prefix "-")))
+;;   ;;  (dotimes (i 10)
+;;   ;;    (global-unset-key (kbd (concat prefix (number-to-string i))))))
+
+;;   ;; Tabs for window layouts (tab-bar.el and prot-tab.el)
+;;   ;; =C-<number>
+;;   ;; (setq tab-bar-select-tab-modifiers '(control))
+
+;;   (setq tab-bar-show t
+;;         tab-bar-new-tab-group nil
+;;         tab-bar-close-button-show nil
+;;         ;; tab-bar-separator " ❘ "
+;;         tab-bar-auto-width nil)
+;;   (setq tab-bar-tab-hints t) ; for tab-bar-circle-number
+
+;;   (setq tab-bar-tab-name-truncated-max 15
+;;         tab-bar-tab-name-function #'tab-bar-tab-name-truncated) ;; #'tab-bar-tab-name-current ; default
+
+;;   (setq tab-bar-format                    ; Emacs 28
+;;         '(
+;;           tab-bar-separator
+;;           tab-bar-format-menu-bar
+;;           tab-bar-format-tabs-groups
+;;           tab-bar-separator
+;;           ;; tab-bar-format-add-tab ;; turn on tab-bar-new-button
+
+;;           tab-bar-format-align-right
+;;           tab-bar-format-global
+;;           ))
+
+;;   ;;   (setq tab-bar-auto-width-max '(160 20))
+
+;;   (unless (display-graphic-p) ; terminal
+;;     (setq auto-resize-tab-bars nil) ; important
+;;     (setq tab-bar-separator nil) ; important
+;;     )
+
+;;   (tab-bar-history-mode +1)
+;;   )
 
 ;;; extra.el ends here

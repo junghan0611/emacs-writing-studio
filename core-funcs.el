@@ -339,7 +339,8 @@ Dedicated (locked) windows are left untouched."
   (rotate-windows-forward (* -1 count)))
 
 ;; from http://dfan.org/blog/2009/02/19/emacs-dedicated-windows/
-(defun toggle-current-window-dedication ()
+;; (defun toggle-current-window-dedication ()
+(defun spacemacs/toggle-current-window-dedication ()
   "Toggle dedication state of a window. Commands that change the buffer that a
 window is displaying will not typically change the buffer displayed by
 a dedicated window."

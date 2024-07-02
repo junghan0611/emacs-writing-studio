@@ -28,17 +28,36 @@
         evil-symbol-word-search t
         evil-ex-search-vim-style-regexp t
         evil-search-module 'evil-search
-        evil-magic 'very-magic
-        evil-want-C-u-delete t
-        evil-want-C-u-scroll t
+        ;; evil-magic 'very-magic
         hs-minor-mode-map nil)
-  :config
   (setq evil-cross-lines t
         evil-kill-on-visual-paste nil
         evil-move-beyond-eol nil
+	evil-want-C-g-bindings t
         evil-want-C-i-jump nil
         evil-want-fine-undo t
+        evil-want-C-u-delete t
+        evil-want-C-u-scroll t
         evil-v$-excludes-newline nil)
+  (setq evil-want-C-w-delete t) ; default t
+  (setq evil-want-C-u-scroll t) ; default t
+  (setq evil-want-Y-yank-to-eol t)
+  :config
+  ;; 'Important' Prevent the cursor from moving beyond the end of line.
+  ;; Don't move the block cursor when toggling insert mode
+  (setq evil-move-cursor-back nil) ; nil is better - default t
+  (setq evil-move-beyond-eol nil) ; default nil
+
+  ;; Don't put overwritten text in the kill ring
+  (setq evil-kill-on-visual-paste nil) ; default t
+  (setq evil-want-fine-undo t) ; doom 'nil
+
+  ;; Don't create a kill entry on every visual movement.
+  ;; More details: https://emacs.stackexchange.com/a/15054:
+  (fset 'evil-visual-update-x-selection 'ignore)
+
+  ;; (setq evil-insert-state-cursor '(box "#F86155")) ;; better look
+  ;; (setq evil-normal-state-cursor '(box "DarkGoldenrod2"))
 
   (setq evil-normal-state-cursor  '("DarkGoldenrod2" box)
         evil-insert-state-cursor  '("chartreuse3" (bar . 2))
@@ -54,7 +73,7 @@
     (defvar evil-indent-variable-alist
       ;; Note that derived modes must come before their sources
       '(((awk-mode c-mode c++-mode java-mode
-          idl-mode java-mode objc-mode pike-mode) . c-basic-offset)
+		   idl-mode java-mode objc-mode pike-mode) . c-basic-offset)
         (groovy-mode . groovy-indent-offset)
         (python-mode . python-indent-offset)
         (cmake-mode . cmake-tab-width)
@@ -184,7 +203,6 @@
 
 ;;; more motions
 
-
 ;; Rebind universal argument
 ;; (global-set-key (kbd "C-M-u") 'universal-argument)
 
@@ -202,8 +220,6 @@
   ;; replace "." search with consul-line in Evil normal state
   ;; use default "/" evil search
   (evil-global-set-key 'normal "." 'consult-line)
-
-  (evil-global-set-key 'insert (kbd "C-k") 'kill-line)
 
   ;; o :: ace-link-info 이거면 충분하다.
   (define-key evil-insert-state-map (kbd "C-]") 'forward-char)
