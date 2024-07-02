@@ -65,6 +65,5 @@
    )
   ("<backspace>" "Switch to previous buffer" corgi/switch-to-previous-buffer)
   ("." "consult-line" consult-line) ; 이게 편함.
-  ("s" "Avy jump sneak" evil-avy-goto-char-timer)
   ) ;; end of (normal|visual)
  )

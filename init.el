@@ -50,7 +50,8 @@
   :config
   (add-to-list 'package-archives
                '("melpa" . "https://melpa.org/packages/"))
-  (package-initialize))
+  (package-initialize)
+  )
 
 ;; Package Management
 
@@ -122,7 +123,7 @@
   :custom
   (modus-themes-italic-constructs t)
   (modus-themes-bold-constructs t)
-  (modus-themes-mixed-fonts t)
+  ;; (modus-themes-mixed-fonts t)
   (modus-themes-to-toggle
    '(modus-operandi modus-vivendi-tinted))
   :init
@@ -132,9 +133,9 @@
    ("C-c w t m" . modus-themes-select)
    ("C-c w t s" . consult-theme)))
 
-(use-package mixed-pitch
-  :hook
-  (text-mode . mixed-pitch-mode))
+;; (use-package mixed-pitch
+;;   :hook
+;;   (text-mode . mixed-pitch-mode))
 
 ;; Window management
 ;; Split windows sensibly
@@ -827,10 +828,26 @@
   ;;  [remap consult-imenu-multi] 'consult-org-agenda)
   )
 
+;;;; wgrep
+
+(use-package wgrep  :defer t)
+
+;;;; avy
+
+(use-package avy
+  :config
+  (setq avy-all-windows nil
+        avy-all-windows-alt t
+        avy-background t
+        ;; the unpredictability of this (when enabled) makes it a poor default
+        avy-single-candidate-jump nil)
+  (add-to-list 'avy-ignored-modes 'magit-status-mode)
+  )
+
 ;;;; embark
 
-(use-package avy :demand t)
 (use-package embark
+  :after avy
   :init
   (with-eval-after-load 'avy
     (defun avy-action-embark (pt)
@@ -906,71 +923,73 @@ targets."
   (embark-collect-mode . consult-preview-at-point-mode)
   )
 
-;;;; wgrep
-
-(use-package wgrep  :defer t)
-
 ;;;; tempel
 
-  ;; Template-based in-buffer completion (tempel.el)
-  ;; NOTE 2023-01-19: Check the `templates'
-  (use-package tempel
-    :ensure t
-    :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
-           ("M-*" . tempel-insert))
-    :config
-    ;; (setq tempel-trigger-prefix "<") ; conflits with evil-shift
-    (setq tempel-path (expand-file-name "tempel-templates.eld" user-org-directory))
-    ;; Use concrete keys because of org mode
-    ;; "M-RET" #'tempel-done
-    ;; "M-{" #'tempel-previous
-    ;; "M-}" #'tempel-next
-    ;; "M-<up>" #'tempel-previous
-    ;; "M-<down>" #'tempel-next
+;; Template-based in-buffer completion (tempel.el)
+;; NOTE 2023-01-19: Check the `templates'
+(use-package tempel
+  :ensure t
+  :config
+  ;; (setq tempel-trigger-prefix "<") ; conflits with evil-shift
+  (setq tempel-path (expand-file-name "tempel-templates.eld" user-emacs-directory))
+  ;; Use concrete keys because of org mode
+  ;; "M-RET" #'tempel-done
+  ;; "M-{" #'tempel-previous
+  ;; "M-}" #'tempel-next
+  ;; "M-<up>" #'tempel-previous
+  ;; "M-<down>" #'tempel-next
 
-    ;; 2023-10-19 disable my custom
-    (define-key tempel-map (kbd "RET") #'tempel-done)
-    (define-key tempel-map (kbd "M-n") #'tempel-next)
-    (define-key tempel-map (kbd "M-p") #'tempel-previous)
-    )
+  ;; 2023-10-19 disable my custom
+  (define-key tempel-map (kbd "RET") #'tempel-done)
+  (define-key tempel-map (kbd "M-n") #'tempel-next)
+  (define-key tempel-map (kbd "M-p") #'tempel-previous)
 
-  ;; ;; (use-package tempel-collection
-  ;; ;;   :defer t
-  ;; ;;   :after tempel
-  ;; ;;   )
+  (global-set-key (kbd "M-+") 'tempel-complete)
+  (global-set-key (kbd "M-*") 'tempel-insert)
+
+  ;; 2023-10-19 disable my custom
+  (define-key tempel-map (kbd "RET") #'tempel-done)
+  (define-key tempel-map (kbd "M-n") #'tempel-next)
+  (define-key tempel-map (kbd "M-p") #'tempel-previous)
+  )
+
+(use-package tempel-collection
+  :defer t
+  :after tempel
+  )
 
 ;;;; corfu
 
-  ;; TAB-and-Go customizations
-  ;; https://github.com/minad/corfu?tab=readme-ov-file#tab-and-go-completion
-  (use-package corfu
-    :demand t
-    :ensure t
-    :custom
-    (corfu-cycle t)  ;; Enable cycling for `corfu-next/previous'
-    ;; (corfu-auto-prefix 4) ; default 3
-    (corfu-auto t) ;; default nil
-    (corfu-on-exact-match nil)
-    (corfu-min-width 35)
-    (corfu-max-width 80)
-    ;; (corfu-preselect 'prompt) ;; Always preselect the prompt
-    :bind
-    (:map corfu-map
-          ("M-." . corfu-move-to-minibuffer))
-    :init
-    (setq completion-cycle-threshold 3)
-    (setq tab-always-indent t)
+;; TAB-and-Go customizations
+;; https://github.com/minad/corfu?tab=readme-ov-file#tab-and-go-completion
+(use-package corfu
+  :demand t
+  :ensure t
+  :custom
+  (corfu-cycle t)  ;; Enable cycling for `corfu-next/previous'
+  ;; (corfu-auto-prefix 4) ; default 3
+  (corfu-auto t) ;; default nil
+  (corfu-on-exact-match nil)
+  (corfu-min-width 35)
+  (corfu-max-width 80)
+  ;; (corfu-preselect 'prompt) ;; Always preselect the prompt
+  :bind
+  (:map corfu-map
+        ("M-." . corfu-move-to-minibuffer))
+  :init
+  (setq completion-cycle-threshold 3)
+  (setq tab-always-indent t)
 
-    (use-package corfu-echo
-      :hook (corfu-mode . corfu-echo-mode))
-    (use-package corfu-history
-      :hook (corfu-mode . corfu-history-mode))
+  (use-package corfu-echo
+    :hook (corfu-mode . corfu-echo-mode))
+  (use-package corfu-history
+    :hook (corfu-mode . corfu-history-mode))
 
-    (with-eval-after-load 'eldoc
-      (eldoc-add-command #'corfu-insert))
+  (with-eval-after-load 'eldoc
+    (eldoc-add-command #'corfu-insert))
 
-    (global-corfu-mode)
-    )
+  (global-corfu-mode)
+  )
 
 ;;;; cape
 
@@ -1052,6 +1071,94 @@ targets."
   (add-hook 'prog-mode-hook 'outli-mode) ; not markdown-mode!
   ;; (add-hook 'org-mode-hook 'outli-mode)
   )
+
+;;;; pcre2el
+
+(use-package pcre2el)
+
+;;;; doom-modeline
+
+(use-package doom-modeline)
+
+;;;; expand-region
+
+(use-package expand-region
+  :commands (er/contract-region er/mark-symbol er/mark-word)
+  :config
+  ;; Easily navigate sillycased words
+  (global-subword-mode +1)
+  (setq expand-region-contract-fast-key "V"
+        expand-region-reset-fast-key "r"
+        expand-region-subword-enabled t))
+
+;;;; hydra
+
+(use-package hydra :ensure t)
+(use-package major-mode-hydra :ensure t)
+(use-package pretty-hydra :ensure t)
+
+;;;; puni
+
+(use-package puni
+  :diminish ""
+  :hook ((puni-mode  . electric-pair-mode)
+         (prog-mode  . puni-mode))
+  :init
+  ;; The default `puni-mode-map' respects "Emacs conventions".  We don't, so
+  ;; it's better to simply clear and rewrite it.
+  (setcdr puni-mode-map nil)
+  (bind-keys
+   :map puni-mode-map
+
+   ;; ("M-<backspace>" . puni-splice)
+   ("M-<delete>" . puni-splice) ; sp-unwrap-sexp
+
+   ("C-<right>"  .  puni-slurp-forward)
+   ("C-<left>" . puni-barf-forward)
+
+   ("C-M-<left>" .  puni-slurp-backward)
+   ("C-M-<right>" . puni-barf-backward)
+
+   ("C-M-<delete>" . puni-splice-killing-forward)
+   ("C-M-<backspace>" . puni-splice-killing-backward)
+
+   ("C-M-a" . beginning-of-defun) ; default
+   ("C-M-e" . end-of-defun)
+   ("M-]" . forward-sexp) ; default
+   ("M-[" . backward-sexp)
+
+   ("C-M-f" . puni-forward-sexp)
+   ("C-M-b" . puni-backward-sexp)
+
+   ("C-M-p" . puni-beginning-of-sexp)
+   ("C-M-n" . puni-end-of-sexp)
+
+   ;; C-M-d down-sexp
+   ("C-M-t" . transpose-sexp)
+   ("C-M-?" . puni-convolute)
+
+   ("C-M-k" . kill-sexp)
+   ("C-M-K"   . backward-kill-sexp)
+   ;; ("C-" . puni-backward-kill-word)
+
+   ("M-)" . puni-syntactic-forward-punct)
+   ("M-(" . puni-syntactic-backward-punct)
+
+   ("C-c DEL" . puni-force-delete)
+   ;; ("C-M-d" . puni-forward-delete-char)
+   ;; ("C-M-k" . puni-kill-line)
+   ;; ("C-M-K" . puni-backward-kill-line)
+   ;;  ("C-M-w" . puni-kill-region)
+
+   ;; ([remap puni-backward-kill-word] . backward-kill-word)
+   ("C-M-z" . puni-squeeze) ; unwrap
+
+   ("C-c {" . puni-wrap-curly)
+   ("C-c (" . puni-wrap-round)
+   ("C-c [" . puni-wrap-square)
+   )
+  )
+
 
 ;;; load files
 

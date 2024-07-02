@@ -98,6 +98,24 @@
   (keymap-set org-mode-map "C-x n 8" #'ews-org-insert-screenshot)
   )
 
+;;; vertico
+
+  (with-eval-after-load 'vertico
+    ;; 2023-12-02
+    (define-key vertico-map (kbd"C-<return>") 'vertico-quick-exit)
+    ;; vertico-directory
+    (define-key vertico-map (kbd "RET")   'vertico-directory-enter)
+    (define-key vertico-map (kbd "DEL")   'vertico-directory-delete-char)
+    (define-key vertico-map (kbd "M-DEL") 'vertico-directory-delete-word)
+
+    ;; 2023-05-23 org-roam-node-find
+    (define-key vertico-map (kbd "C-n") #'spacemacs/next-candidate-preview)
+    (define-key vertico-map (kbd "C-p") #'spacemacs/previous-candidate-preview)
+
+    (unless (display-graphic-p) ; terminal
+      (define-key vertico-map (kbd "M-<return>") #'vertico-exit-input))
+    )
+
 ;;; outli
 
 (progn

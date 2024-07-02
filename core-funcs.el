@@ -19,7 +19,7 @@
 ;;
 ;;; Code:
 
-;; (require 'pcre2el)
+(require 'pcre2el)
 
 ;;;; File
 
