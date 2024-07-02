@@ -731,6 +731,283 @@
 
 ;;; custom
 
+;;;; completion
+
+(use-package consult
+  :commands consult-ripgrep-noignore
+  :init
+  (advice-add #'project-find-regexp :override #'consult-ripgrep)
+  (advice-add #'project-switch-to-buffer :override #'consult-project-buffer)
+  :config
+  (setq consult-narrow-key "?"
+        consult-preview-key "M-.")
+
+  (defun consult-delete-default-contents ()
+    (remove-hook 'pre-command-hook 'consult-delete-default-contents)
+    (cond ((member this-command '(self-insert-command))
+           (delete-minibuffer-contents))
+          (t (put-text-property (minibuffer-prompt-end) (point-max) 'face 'default))))
+
+  (consult-customize consult-theme
+                     :preview-key '(:debounce 0.2 any)
+                     consult-goto-line consult-imenu consult-line
+                     :preview-key 'any
+                     consult-line
+                     :initial (when-let ((string (thing-at-point 'word)))
+                                (add-hook 'pre-command-hook 'consult-delete-default-contents)
+                                (propertize string 'face 'shadow)))
+
+  ;; https://github.com/minad/consult/wiki#temporarily-override-consult-ripgrep-args
+  (defun consult--ripgrep-noignore-builder (input)
+    "consult--ripgrep-builder with INPUT, but ignores .gitignore."
+    (let ((consult-ripgrep-args
+           (if (string-match-p "--no-ignore-vcs" consult-ripgrep-args)
+               consult-ripgrep-args
+             (concat consult-ripgrep-args "--no-ignore-vcs ."))))
+      (consult--make-ripgrep-builder input)))
+
+  (defun consult-ripgrep-noignore (&optional dir initial)
+    "Do consult-ripgrep with DIR and INITIAL, but without ignoring."
+    (interactive "P")
+    (consult--grep "Ripgrep"
+                   #'consult--ripgrep-noignore-builder
+                   ;; Here the directory prompt is called by default to avoid searching from the project root
+                   (if dir dir t) initial))
+
+  (defvar consult--source-project-file
+    `(:name     "Project File"
+      :narrow   ?f
+      :category file
+      :face     consult-file
+      :history  file-name-history
+      :state    ,#'consult--file-state
+      :enabled  ,(lambda () consult-project-function)
+      :items
+      ,(lambda ()
+         (when-let (project (project-current t))
+           (let* ((all-files (project-files project))
+                  (common-parent-directory
+                   (let ((common-prefix (try-completion "" all-files)))
+                     (if (> (length common-prefix) 0)
+                         (file-name-directory common-prefix))))
+                  (cpd-length (length common-parent-directory))
+                  items)
+             (print all-files)
+             (dolist (file all-files items)
+               (let ((part (substring file cpd-length)))
+                 (when (equal part "") (setq part "./"))
+                 (put-text-property 0 1 'multi-category `(file . ,file) part)
+                 (push part items))))))
+      "Project file candidate source for `consult-buffer'."))
+
+  (defvar consult--source-project-file-hidden
+    `(:hidden t :narrow (?f . "Project File") ,@consult--source-project-file)
+    "Like `consult--source-project-file' but hidden by default.")
+
+  (defvar consult--source-project-recent-file-override
+    `(:name "Recent File" :narrow (?r . "Recent File") ,@consult--source-project-file)
+    "Like `consult--source-recent-file' but overridden the narrow key.")
+
+  (setq consult-project-buffer-sources
+        '(consult--source-project-buffer
+          consult--source-project-recent-file-override
+          consult--source-project-file-hidden))
+  ;; :general
+  ;; ([remap switch-to-buffer]    'consult-buffer
+  ;;  [remap goto-line]           'consult-goto-line
+  ;;  [remap imenu]               'consult-imenu)
+  ;; (tyrant-def
+  ;;   "jI" '("imenu-multi" . consult-imenu-multi)
+  ;;   "fl" '("locate-files" . consult-find)
+  ;;   "jj" '("search lines" . consult-line)
+  ;;   "jJ" '("search lines a/ buffers" . consult-line-multi)
+  ;;   "Tt" 'consult-minor-mode-menu)
+  ;; (org-mode-map
+  ;;  [remap consult-imenu]       'consult-org-heading
+  ;;  [remap consult-imenu-multi] 'consult-org-agenda)
+  )
+
+;;;; embark
+
+(use-package avy :demand t)
+(use-package embark
+  :init
+  (with-eval-after-load 'avy
+    (defun avy-action-embark (pt)
+      (unwind-protect
+          (save-excursion
+            (goto-char pt)
+            (embark-act))
+        (select-window
+         (cdr (ring-ref avy-ring 0))))
+      t)
+    (setf (alist-get ?. avy-dispatch-alist) 'avy-action-embark))
+  :config
+  (with-eval-after-load 'which-key
+    (defun embark-which-key-indicator ()
+      "An embark indicator that displays keymaps using which-key.
+The which-key help message will show the type and value of the
+current target followed by an ellipsis if there are further
+targets."
+      (lambda (&optional keymap targets prefix)
+        (if (null keymap)
+            (which-key--hide-popup-ignore-command)
+          (which-key--show-keymap
+           (if (eq (caar targets) 'embark-become)
+               "Become"
+             (format "Act on %s '%s'%s"
+                     (plist-get (car targets) :type)
+                     (embark--truncate-target (plist-get (car targets) :target))
+                     (if (cdr targets) "…" "")))
+           (if prefix
+               (pcase (lookup-key keymap prefix 'accept-default)
+                 ((and (pred keymapp) km) km)
+                 (_ (key-binding prefix 'accept-default)))
+             keymap)
+           nil nil t (lambda (binding)
+                       (not (string-suffix-p "-argument" (cdr binding))))))))
+
+    (setq embark-indicators '(embark-which-key-indicator
+                              embark-highlight-indicator
+                              embark-isearch-highlight-indicator))
+
+    (defun embark-hide-which-key-indicator (fn &rest args)
+      "Hide the which-key indicator immediately when using the completing-read prompter."
+      (when-let ((win (get-buffer-window which-key--buffer
+                                         'visible)))
+        (quit-window 'kill-buffer win)
+        (let ((embark-indicators (delq #'embark-which-key-indicator embark-indicators)))
+          (apply fn args))))
+
+    (advice-add #'embark-completing-read-prompter
+                :around #'embark-hide-which-key-indicator))
+
+  (with-eval-after-load 'vertico
+    (defun embark-vertico-indicator ()
+      (let ((fr face-remapping-alist))
+        (lambda (&optional keymap _targets prefix)
+          (when (bound-and-true-p vertico--input)
+            (setq-local face-remapping-alist
+                        (if keymap
+                            (cons '(vertico-current . embark-target) fr)
+                          fr))))))
+
+    (add-to-list 'embark-indicators #'embark-vertico-indicator))
+  ;; :general
+  ;; (:keymaps '(global normal)
+  ;;           "C-." 'embark-act
+  ;;           "M-." 'embark-dwim)
+  )
+
+(use-package embark-consult
+  :demand t
+  :after (consult embark)
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode)
+  )
+
+;;;; wgrep
+
+(use-package wgrep  :defer t)
+
+;;;; tempel
+
+  ;; Template-based in-buffer completion (tempel.el)
+  ;; NOTE 2023-01-19: Check the `templates'
+  (use-package tempel
+    :ensure t
+    :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
+           ("M-*" . tempel-insert))
+    :config
+    ;; (setq tempel-trigger-prefix "<") ; conflits with evil-shift
+    (setq tempel-path (expand-file-name "tempel-templates.eld" user-org-directory))
+    ;; Use concrete keys because of org mode
+    ;; "M-RET" #'tempel-done
+    ;; "M-{" #'tempel-previous
+    ;; "M-}" #'tempel-next
+    ;; "M-<up>" #'tempel-previous
+    ;; "M-<down>" #'tempel-next
+
+    ;; 2023-10-19 disable my custom
+    (define-key tempel-map (kbd "RET") #'tempel-done)
+    (define-key tempel-map (kbd "M-n") #'tempel-next)
+    (define-key tempel-map (kbd "M-p") #'tempel-previous)
+    )
+
+  ;; ;; (use-package tempel-collection
+  ;; ;;   :defer t
+  ;; ;;   :after tempel
+  ;; ;;   )
+
+;;;; corfu
+
+  ;; TAB-and-Go customizations
+  ;; https://github.com/minad/corfu?tab=readme-ov-file#tab-and-go-completion
+  (use-package corfu
+    :demand t
+    :ensure t
+    :custom
+    (corfu-cycle t)  ;; Enable cycling for `corfu-next/previous'
+    ;; (corfu-auto-prefix 4) ; default 3
+    (corfu-auto t) ;; default nil
+    (corfu-on-exact-match nil)
+    (corfu-min-width 35)
+    (corfu-max-width 80)
+    ;; (corfu-preselect 'prompt) ;; Always preselect the prompt
+    :bind
+    (:map corfu-map
+          ("M-." . corfu-move-to-minibuffer))
+    :init
+    (setq completion-cycle-threshold 3)
+    (setq tab-always-indent t)
+
+    (use-package corfu-echo
+      :hook (corfu-mode . corfu-echo-mode))
+    (use-package corfu-history
+      :hook (corfu-mode . corfu-history-mode))
+
+    (with-eval-after-load 'eldoc
+      (eldoc-add-command #'corfu-insert))
+
+    (global-corfu-mode)
+    )
+
+;;;; cape
+
+  (use-package cape
+    :after corfu
+    :demand t
+    :init
+    ;; /gopar-dotfiles-youtuber/README.org:1371
+    (setq cape-dabbrev-min-length 4) ; default 4
+    (setq cape-dabbrev-check-other-buffers 'some)
+    (defun corfu-enable-in-minibuffer ()
+      "Enable Corfu in the minibuffer if `completion-at-point' is bound."
+      (when (where-is-internal #'completion-at-point (list (current-local-map)))
+        (setq-local corfu-auto nil) ;; Enable/disable auto completion
+        ;; Disable automatic echo and popup
+        (setq-local corfu-echo-delay nil)
+        (corfu-mode 1)))
+    (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
+    ;; Bind dedicated completion commands
+    ;; Alternative prefix keys: C-c p, M-p, M-+, ...
+    :bind (("M-p" . completion-at-point) ;; capf
+           ("M-P t" . complete-tag)        ;; etags
+           ("M-P d" . cape-dabbrev)        ;; or dabbrev-completion
+           ("M-P h" . cape-history)
+           ("M-P f" . cape-file)
+           ("M-P k" . cape-keyword)
+           ("M-P s" . cape-elisp-symbol)
+           ("M-P e" . cape-elisp-block)
+           ("M-P a" . cape-abbrev)
+           ("M-P l" . cape-line)
+           ("M-P w" . cape-dict)
+           ("M-P :" . cape-emoji)
+           )
+    )
+
+;;;; magit
+
 ;; (unless (package-installed-p 'with-editor)
 ;;   (package-vc-install "https://github.com/magit/with-editor"))
 (use-package with-editor)
@@ -747,7 +1024,7 @@
 ;; (use-package forge
 ;;   :after magit)
 
-;;; outli
+;;;; outli
 
 (progn 
   (unless (package-installed-p 'outli)
