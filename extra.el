@@ -407,15 +407,13 @@
   (tab-bar-history-mode +1)
   )
 
-;;; fringe and menu
+;;; context-menu
 
 (when (display-graphic-p) ;; gui
-  (set-fringe-mode 10) ;; Give some breathing room
   (pixel-scroll-precision-mode 1) ;; default nil
 
   ;; 1) 기본 메뉴를 이용해 본다.
   (context-menu-mode 1)
   )
-
 
 ;;; extra.el ends here

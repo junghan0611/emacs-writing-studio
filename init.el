@@ -104,7 +104,7 @@
 
 (tool-bar-mode -1)
 (menu-bar-mode -1)
-(scroll-bar-mode -1)
+;; (scroll-bar-mode -1)
 
 ;; Short answers only please
 
@@ -112,11 +112,12 @@
 
 ;; Spacious padding
 
-;; (use-package spacious-padding
-;;   :custom
-;;   (line-spacing 3)
-;;   :init
-;;   (spacious-padding-mode 1))
+(use-package spacious-padding
+  :if window-system
+  :custom
+  (line-spacing 3)
+  :init
+  (spacious-padding-mode 1))
 
 ;; Modus Themes
 
