@@ -746,7 +746,11 @@
   (when (file-exists-p per-machine-filename)
     (load-file per-machine-filename)))
 
-;;;; Basics
+;;;; Load Evil
+
+(load-file (concat (file-name-as-directory user-emacs-directory) "evil.el"))
+
+;;;; basics
 
 ;; (setq-default display-line-numbers-width-start t) ; doom's default t
 (setq inhibit-compacting-font-caches t)
@@ -786,7 +790,7 @@
 
 ;; (setq ring-bell-function 'ignore)
 
-;;;; Tab-width
+;;;; tab-width
 
 ;; ====== Buffer-local variables ======
 (setq-default
@@ -805,7 +809,7 @@
  display-line-numbers-width-start t ; 2024-06-26
  )
 
-;;;; Display-Line-Numbers-Mode
+;;;; display-Line-Numbers-Mode
 
 (column-number-mode)
 (setq display-line-numbers-type 'relative)
@@ -820,7 +824,7 @@
 ;; (add-hook 'markdown-mode-hook 'display-line-numbers-mode)
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
 
-;;;; Time
+;;;; time
 
 (require 'time)
 (setq display-time-format " | %a %e %b, %H:%M | ")
@@ -862,7 +866,7 @@
 (setq world-clock-timer-enable t)
 (setq world-clock-timer-second 60)
 
-;;;; Calendar
+;;;; calendar
 
 (require 'calendar)
 ;; (setq org-agenda-start-on-weekday nil)
@@ -1223,7 +1227,39 @@ targets."
 
 ;;;; doom-modeline
 
-(use-package doom-modeline)
+(use-package doom-modeline
+  :init
+  (setq doom-modeline-time nil)
+  (setq doom-modeline-time-icon nil)
+  (setq doom-modeline-minor-modes nil)
+  ;; (setq doom-modeline-battery nil)
+  ;; (setq Info-breadcrumbs-in-mode-line-mode nil)
+  (setq doom-modeline-support-imenu t)
+
+  (setq doom-modeline-enable-word-count nil)
+  ;; (setq doom-modeline-continuous-word-count-modes '(markdown-mode gfm-mod)) ; org-mode
+
+  (setq doom-modeline-icon nil) ; (display-graphic-p))
+
+  (setq doom-modeline-modal-icon nil)
+  (setq doom-modeline-major-mode-icon nil)
+  (setq doom-modeline-buffer-modification-icon t)
+
+  ;; (setq doom-modeline-height 35)
+  (setq doom-modeline-bar-width 10)
+
+  (setq doom-modeline-persp-name t) ; doom nil
+  ;; (setq doom-modeline-window-width-limit (- fill-column 5))
+
+  (setq doom-modeline-repl t)
+  (setq doom-modeline-github t)
+  (setq doom-modeline-lsp t)
+  (setq doom-modeline-indent-info t)
+  (setq doom-modeline-hud t)
+  (setq doom-modeline-buffer-file-name-style 'truncate-upto-project)
+  
+  (add-hook 'after-init-hook 'doom-modeline-mode)
+  )
 
 ;;;; expand-region
 
@@ -1241,6 +1277,16 @@ targets."
 (use-package hydra :ensure t)
 (use-package major-mode-hydra :ensure t)
 (use-package pretty-hydra :ensure t)
+
+;;;; aggressive-indent
+
+(use-package aggressive-indent
+  :defer 1
+  :if window-system
+  :config
+  (add-hook 'emacs-lisp-mode-hook 'aggressive-indent-mode)
+  ;; (add-hook 'hy-mode-hook 'aggressive-indent-mode)
+  )
 
 ;;;; puni
 
@@ -1304,7 +1350,7 @@ targets."
    )
   )
 
-;;; Winum
+;;;; winum
 
 (use-package winum
   :init
@@ -1331,17 +1377,185 @@ targets."
   (winum-mode 1)
   )
 
-;;; load files
+;;;; remember (built-in)
+
+(use-package remember
+  :ensure nil
+  :defer 2
+  :commands remember)
+
+;; :config
+;; (setq remember-data-file (my/org-remember-file))
+;; (setq remember-notes-initial-major-mode 'org-mode
+;;       remember-notes-auto-save-visited-file-name t)
+
+;;;; Load Extra files
 
 ;; (load-file (concat (file-name-as-directory user-emacs-directory) "meow.el"))
-(load-file (concat (file-name-as-directory user-emacs-directory) "evil.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "extra.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "core-funcs.el"))
 
-(load-file (concat (file-name-as-directory user-emacs-directory) "hydrakeys.el"))
+;;; IDE
+
+;;;; treesit-auto
+
+(use-package treesit-auto
+  :custom
+  (treesit-auto-install 'prompt)
+  :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode))
+
+;;;; combobulate
+
+;; `M-x combobulate' (default: `C-c o o') to start using Combobulate
+;; (setq c-ts-mode-indent-offset 4)
+(use-package treesit
+  :ensure nil
+  :mode (("\\.tsx\\'" . tsx-ts-mode))
+  :config
+  ;; Do not forget to customize Combobulate to your liking:
+  ;;  M-x customize-group RET combobulate RET
+  )
+
+(unless (package-installed-p 'combobulate)
+  (package-vc-install "https://github.com/mickeynp/combobulate"))
+
+(use-package combobulate
+  :ensure nil
+  :preface
+  ;; You can customize Combobulate's key prefix here.
+  ;; Note that you may have to restart Emacs for this to take effect!
+  (setq combobulate-key-prefix "C-c o")
+  :hook
+  ((python-ts-mode . combobulate-mode)
+   (js-ts-mode . combobulate-mode)
+   (html-ts-mode . combobulate-mode)
+   (css-ts-mode . combobulate-mode)
+   (yaml-ts-mode . combobulate-mode)
+   (typescript-ts-mode . combobulate-mode)
+   (json-ts-mode . combobulate-mode)
+   (tsx-ts-mode . combobulate-mode))
+  ;; Amend this to the directory where you keep Combobulate's source
+  ;; code.
+  )
+
+;;;; eglot
+
+(use-package eglot
+  :ensure nil
+  :demand t
+  :commands eglot
+  :bind (:map eglot-mode-map
+              ("C-c d" . eldoc)
+              ("C-c a" . eglot-code-actions)
+              ("C-c r" . eglot-rename))
+  :init
+  (progn
+    (setq eglot-autoshutdown t) ;; shutdown after closing the last managed buffer
+    ;; (setq eglot-sync-connect 0) ;; async, do not block
+    ;; (setq eglot-extend-to-xref t) ;; can be interesting!
+    ;; (setq eglot-send-changes-idle-time 0.7)
+    )
+  :config
+  ;; (add-to-list 'eglot-server-programs '(elixir-ts-mode "language_server.sh"))
+  (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
+
+  ;; whhone
+  (define-key eglot-mode-map
+              [remap xref-find-definitions] #'eglot-find-typeDefinition)
+  (define-key eglot-mode-map
+              [remap xref-find-references] #'eglot-find-declaration)
+  (define-key eglot-mode-map (kbd "M-l r") 'eglot-rename)
+  (define-key eglot-mode-map (kbd "M-l f") 'eglot-format)
+
+  ;; :config
+  ;; Provide `consult-lsp' functionality from `consult-eglot', useful
+  ;; for packages which relay on `consult-lsp' (like `dirvish-subtree').
+  ;; (defalias 'consult-lsp-file-symbols #'consult-eglot-symbols)
+  ;; (define-key eglot-mode-map (kbd "C-c e c") #'consult-eglot-symbols)
+  )
+
+(use-package consult-eglot
+  :after eglot
+  :bind (:map eglot-mode-map
+              ("C-c s" . consult-eglot-symbols)))
+
+;;;; conda
+
+;; (unless (package-installed-p 'conda)
+;;   (package-install 'conda))
+
+(use-package conda)
+
+(require 'conda)
+;; if you want interactive shell support, include:
+(conda-env-initialize-interactive-shells)
+;; if you want eshell support, include:
+;; (conda-env-initialize-eshell)
+;; if you want auto-activation (see below for details), include:
+(conda-env-autoactivate-mode t)
+;; if you want to automatically activate a conda environment on the opening of a file:
+(add-to-list 'find-file-hook (lambda () (when (bound-and-true-p conda-project-env-path)
+                                          (conda-env-activate-for-buffer))))
+
+;;;; hylang
+
+(unless (package-installed-p 'hy-mode)
+  (package-vc-install "https://github.com/jethack23/hy-mode"))
+
+(use-package hy-mode
+  :ensure nil
+  :mode "\\.hy\\'"
+  :interpreter "hy"
+  ;; :hook ((hy-mode . eglot-ensure))
+  :config
+  ;; (set-repl-handler! 'hy-mode #'hy-shell-start-or-switch-to-shell)
+  ;; (set-formatter! 'lisp-indent #'apheleia-indent-lisp-buffer :modes '(hy-mode))
+  (when (executable-find "hyuga") ; it's works!
+    (with-eval-after-load 'eglot
+      (add-to-list 'eglot-server-programs '(hy-mode . ("hyuga"))))
+    )
+  )
+
+;;;; haskell
+
+(use-package haskell-mode)
+
+;;;; formatter
+
+;;;###autoload
+(defun my/format-buffer ()
+  "Format a buffer."
+  (interactive)
+  (cond
+   ((eq major-mode 'emacs-lisp-mode)
+    (indent-region (point-min) (point-max)))
+   ((eq major-mode 'ledger-mode)
+    (ledger-mode-clean-buffer))
+   (t (call-interactively 'apheleia-format-buffer))))
+
+(use-package apheleia
+  :after evil
+  :commands (apheleia-format-buffer my/format-buffer)
+  :config
+  ;; (add-hook 'markdown-mode-hook 'apheleia-mode)
+  (add-hook 'yaml-mode-hook 'apheleia-mode)
+  )
+
+;;;; TODO sly for common-lisp
+
+;;; Keybindings
+
+;;;; For Mode
+
 (load-file (concat (file-name-as-directory user-emacs-directory) "keys.el"))
 
-;;; corkey bindings
+;;;; Hydra and Transient
+
+(load-file (concat (file-name-as-directory user-emacs-directory) "hydrakeys.el"))
+
+;;;; corkey bindings
 
 (dolist (dir '("corkey" "corgi-bindings"))
   (push (expand-file-name dir user-emacs-directory) load-path))
@@ -1361,7 +1575,7 @@ targets."
 ;; Automatically pick up keybinding changes
 (corkey/load-and-watch)
 
-;;; easy mode
+;;; Easy mode
 
 ;;;; context-mode 
 
@@ -1381,7 +1595,7 @@ targets."
   ;; ibuffer-mode-map
   )
 
-;;; Default Workspaces
+;;; Workspaces
 
 (defun +my/open-workspaces ()
   (interactive)
