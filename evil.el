@@ -66,14 +66,12 @@
         evil-visual-state-cursor  '("gray" (hbar . 2))
         evil-motion-state-cursor  '("plum3" box))
 
-  (evil-set-undo-system 'undo-redo)
-
   (progn
     ;; Thanks to `editorconfig-emacs' for many of these
     (defvar evil-indent-variable-alist
       ;; Note that derived modes must come before their sources
       '(((awk-mode c-mode c++-mode java-mode
-		   idl-mode java-mode objc-mode pike-mode) . c-basic-offset)
+	  idl-mode java-mode objc-mode pike-mode) . c-basic-offset)
         (groovy-mode . groovy-indent-offset)
         (python-mode . python-indent-offset)
         (cmake-mode . cmake-tab-width)
@@ -230,6 +228,35 @@
   (define-key evil-insert-state-map (kbd "C-e") 'evil-end-of-line-or-visual-line)
   ;; =C-w= 'insert 'evil-delete-backward-word
   ;; =C-w= 'visual 'evil-window-map
+  )
+
+
+;;; undo-fu
+
+(use-package undo-fu
+  :demand t
+  :config
+  ;; Increase undo history limits to reduce likelihood of data loss
+  (setq undo-limit 400000           ; 400kb (default is 160kb)
+        undo-strong-limit 3000000   ; 3mb   (default is 240kb)
+        undo-outer-limit 48000000)  ; 48mb  (default is 24mb)
+  ;; (evil-define-key 'normal 'global (kbd "C-r") #'undo-fu-only-redo)
+  ;; (evil-define-key 'normal 'global "u" #'undo-fu-only-undo)
+
+  ;; Undo-fu customization options
+  ;; Undoing with a selection will use undo within that region.
+  (setq undo-fu-allow-undo-in-region t)
+  ;; Use the `undo-fu-disable-checkpoint' command instead of Ctrl-G `keyboard-quit' for non-linear behavior.
+  (setq undo-fu-ignore-keyboard-quit t)
+
+  ;; C-r 은 isearch-backward 가 기본
+  (define-key evil-normal-state-map "u" 'undo-fu-only-undo)
+  (define-key evil-normal-state-map "\C-r" 'undo-fu-only-redo)
+  ;; By default while in insert all changes are one big blob. Be more granular
+  (setq evil-want-fine-undo t)
+
+  (setq evil-undo-system 'undo-fu)
+  (evil-set-undo-system 'undo-fu)
   )
 
 ;;; evil.el ends here

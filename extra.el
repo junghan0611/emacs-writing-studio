@@ -79,7 +79,6 @@
               (hl-line-mode 1)))
   (add-hook 'dired-mode-hook 'dired-hide-details-mode)
   (remove-hook 'dired-mode-hook 'dired-omit-mode)
-
   )
 
 ;;;; dired-preview
@@ -354,49 +353,49 @@
 
 ;;; tab-bar
 
-;; (use-package tab-bar
-;;   :ensure nil
-;;   :config
-;;   ;; Disable the "numeric argument". When used, I use the =C-u= prefix.
-;;   ;; (dolist (prefix '("C-"))
-;;   ;;  (global-unset-key (kbd (concat prefix "-")))
-;;   ;;  (dotimes (i 10)
-;;   ;;    (global-unset-key (kbd (concat prefix (number-to-string i))))))
+(use-package tab-bar
+  :ensure nil
+  :config
+  ;; Disable the "numeric argument". When used, I use the =C-u= prefix.
+  ;; (dolist (prefix '("C-"))
+  ;;  (global-unset-key (kbd (concat prefix "-")))
+  ;;  (dotimes (i 10)
+  ;;    (global-unset-key (kbd (concat prefix (number-to-string i))))))
 
-;;   ;; Tabs for window layouts (tab-bar.el and prot-tab.el)
-;;   ;; =C-<number>
-;;   ;; (setq tab-bar-select-tab-modifiers '(control))
+  ;; Tabs for window layouts (tab-bar.el and prot-tab.el)
+  ;; =C-<number>
+  ;; (setq tab-bar-select-tab-modifiers '(control))
 
-;;   (setq tab-bar-show t
-;;         tab-bar-new-tab-group nil
-;;         tab-bar-close-button-show nil
-;;         ;; tab-bar-separator " ❘ "
-;;         tab-bar-auto-width nil)
-;;   (setq tab-bar-tab-hints t) ; for tab-bar-circle-number
+  (setq tab-bar-show t
+        tab-bar-new-tab-group nil
+        tab-bar-close-button-show nil
+        ;; tab-bar-separator " ❘ "
+        tab-bar-auto-width nil)
+  ;; (setq tab-bar-tab-hints t) ; for tab-bar-circle-number
 
-;;   (setq tab-bar-tab-name-truncated-max 15
-;;         tab-bar-tab-name-function #'tab-bar-tab-name-truncated) ;; #'tab-bar-tab-name-current ; default
+  (setq tab-bar-tab-name-truncated-max 15
+        tab-bar-tab-name-function #'tab-bar-tab-name-truncated) ;; #'tab-bar-tab-name-current ; default
 
-;;   (setq tab-bar-format                    ; Emacs 28
-;;         '(
-;;           tab-bar-separator
-;;           tab-bar-format-menu-bar
-;;           tab-bar-format-tabs-groups
-;;           tab-bar-separator
-;;           ;; tab-bar-format-add-tab ;; turn on tab-bar-new-button
+  (setq tab-bar-format                    ; Emacs 28
+        '(
+          ;; tab-bar-separator
+          tab-bar-format-menu-bar
+          tab-bar-format-tabs-groups
+          ;; tab-bar-separator
+          ;; tab-bar-format-add-tab ;; turn on tab-bar-new-button
 
-;;           tab-bar-format-align-right
-;;           tab-bar-format-global
-;;           ))
+          tab-bar-format-align-right
+          tab-bar-format-global
+          ))
 
-;;   ;;   (setq tab-bar-auto-width-max '(160 20))
+  ;;   (setq tab-bar-auto-width-max '(160 20))
 
-;;   (unless (display-graphic-p) ; terminal
-;;     (setq auto-resize-tab-bars nil) ; important
-;;     (setq tab-bar-separator nil) ; important
-;;     )
+  (unless (display-graphic-p) ; terminal
+    (setq auto-resize-tab-bars nil) ; important
+    (setq tab-bar-separator nil) ; important
+    )
 
-;;   (tab-bar-history-mode +1)
-;;   )
+  (tab-bar-history-mode +1)
+  )
 
 ;;; extra.el ends here

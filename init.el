@@ -59,7 +59,8 @@
   :custom
   (use-package-always-ensure t)
   (package-native-compile t)
-  (warning-minimum-level :emergency))
+  ;; (warning-minimum-level :emergency)
+  )
 
 ;; Load EWS functions
 
@@ -264,23 +265,23 @@
 
 ;; Org modern: Most features disables for beginnng users
 
-(use-package org-modern
-  :hook
-  (org-mode . org-modern-mode)
-  :custom
-  (org-modern-table nil)
-  (org-modern-keyword nil)
-  (org-modern-timestamp nil)
-  (org-modern-priority nil)
-  (org-modern-checkbox nil)
-  (org-modern-tag nil)
-  (org-modern-block-name nil)
-  (org-modern-keyword nil)
-  (org-modern-footnote nil)
-  (org-modern-internal-target nil)
-  (org-modern-radio-target nil)
-  (org-modern-statistics nil)
-  (org-modern-progress nil))
+;; (use-package org-modern
+;;   :hook
+;;   (org-mode . org-modern-mode)
+;;   :custom
+;;   (org-modern-table nil)
+;;   (org-modern-keyword nil)
+;;   (org-modern-timestamp nil)
+;;   (org-modern-priority nil)
+;;   (org-modern-checkbox nil)
+;;   (org-modern-tag nil)
+;;   (org-modern-block-name nil)
+;;   (org-modern-keyword nil)
+;;   (org-modern-footnote nil)
+;;   (org-modern-internal-target nil)
+;;   (org-modern-radio-target nil)
+;;   (org-modern-statistics nil)
+;;   (org-modern-progress nil))
 
 ;; INSPIRATION
 
@@ -520,13 +521,13 @@
 
 ;; Undo Tree
 
-(use-package undo-tree
-  :config
-  (global-undo-tree-mode)
-  :custom
-  (undo-tree-auto-save-history nil)
-  :bind
-  (("C-c w u" . undo-tree-visualize)))
+;; (use-package undo-tree
+;;   :config
+;;   (global-undo-tree-mode)
+;;   :custom
+;;   (undo-tree-auto-save-history nil)
+;;   :bind
+;;   (("C-c w u" . undo-tree-visualize)))
 
 ;; Export citations with Org Mode
 
@@ -731,6 +732,10 @@
   ("C-x r D" . bookmark-delete))
 
 ;;; custom
+
+;;;; configs values
+
+(setq inhibit-startup-screen t)
 
 ;;;; completion
 
@@ -980,50 +985,50 @@ targets."
   (setq completion-cycle-threshold 3)
   (setq tab-always-indent t)
 
-  (use-package corfu-echo
-    :hook (corfu-mode . corfu-echo-mode))
-  (use-package corfu-history
-    :hook (corfu-mode . corfu-history-mode))
-
   (with-eval-after-load 'eldoc
     (eldoc-add-command #'corfu-insert))
+
+  (require 'corfu-echo)
+  (add-hook 'corfu-mode-hook 'corfu-echo-mode)
+  (require 'corfu-history)
+  (add-hook 'corfu-mode-hook 'corfu-history-mode)
 
   (global-corfu-mode)
   )
 
 ;;;; cape
 
-  (use-package cape
-    :after corfu
-    :demand t
-    :init
-    ;; /gopar-dotfiles-youtuber/README.org:1371
-    (setq cape-dabbrev-min-length 4) ; default 4
-    (setq cape-dabbrev-check-other-buffers 'some)
-    (defun corfu-enable-in-minibuffer ()
-      "Enable Corfu in the minibuffer if `completion-at-point' is bound."
-      (when (where-is-internal #'completion-at-point (list (current-local-map)))
-        (setq-local corfu-auto nil) ;; Enable/disable auto completion
-        ;; Disable automatic echo and popup
-        (setq-local corfu-echo-delay nil)
-        (corfu-mode 1)))
-    (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
-    ;; Bind dedicated completion commands
-    ;; Alternative prefix keys: C-c p, M-p, M-+, ...
-    :bind (("M-p" . completion-at-point) ;; capf
-           ("M-P t" . complete-tag)        ;; etags
-           ("M-P d" . cape-dabbrev)        ;; or dabbrev-completion
-           ("M-P h" . cape-history)
-           ("M-P f" . cape-file)
-           ("M-P k" . cape-keyword)
-           ("M-P s" . cape-elisp-symbol)
-           ("M-P e" . cape-elisp-block)
-           ("M-P a" . cape-abbrev)
-           ("M-P l" . cape-line)
-           ("M-P w" . cape-dict)
-           ("M-P :" . cape-emoji)
-           )
-    )
+(use-package cape
+  :after corfu
+  :demand t
+  :init
+  ;; /gopar-dotfiles-youtuber/README.org:1371
+  (setq cape-dabbrev-min-length 4) ; default 4
+  (setq cape-dabbrev-check-other-buffers 'some)
+  (defun corfu-enable-in-minibuffer ()
+    "Enable Corfu in the minibuffer if `completion-at-point' is bound."
+    (when (where-is-internal #'completion-at-point (list (current-local-map)))
+      (setq-local corfu-auto nil) ;; Enable/disable auto completion
+      ;; Disable automatic echo and popup
+      (setq-local corfu-echo-delay nil)
+      (corfu-mode 1)))
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
+  ;; Bind dedicated completion commands
+  ;; Alternative prefix keys: C-c p, M-p, M-+, ...
+  :bind (("M-p" . completion-at-point) ;; capf
+         ("M-P t" . complete-tag)        ;; etags
+         ("M-P d" . cape-dabbrev)        ;; or dabbrev-completion
+         ("M-P h" . cape-history)
+         ("M-P f" . cape-file)
+         ("M-P k" . cape-keyword)
+         ("M-P s" . cape-elisp-symbol)
+         ("M-P e" . cape-elisp-block)
+         ("M-P a" . cape-abbrev)
+         ("M-P l" . cape-line)
+         ("M-P w" . cape-dict)
+         ("M-P :" . cape-emoji)
+         )
+  )
 
 ;;;; magit
 
@@ -1159,7 +1164,6 @@ targets."
    )
   )
 
-
 ;;; load files
 
 ;; (load-file (concat (file-name-as-directory user-emacs-directory) "meow.el"))
@@ -1198,10 +1202,10 @@ targets."
     (tab-bar-new-tab)
     (tab-bar-rename-tab "home" 1)
     (tab-bar-rename-tab "time" 2)
-    (tab-bar-select-tab 2)
+    ;; (tab-bar-select-tab 2)
     ;; (org-agenda nil "n")
-    (org-agenda-goto-today)
-    (delete-other-windows)
+    ;; (org-agenda-goto-today)
+    ;; (delete-other-windows)
     (tab-bar-select-tab 1)
     )
   )
