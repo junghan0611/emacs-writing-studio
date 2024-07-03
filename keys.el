@@ -33,6 +33,28 @@
 (global-set-key (kbd "M-c") 'major-mode-hydra)
 (global-set-key (kbd "<f2>") 'major-mode-hydra)
 
+;;; eldoc
+
+(global-set-key (kbd "C-M-'") 'eldoc-toggle)
+
+;;; dired
+
+(with-eval-after-load 'dired
+  (evil-define-key 'normal dired-mode-map
+    (kbd "C-c C-e") 'wdired-change-to-wdired-mode
+    (kbd "C-c l") 'org-store-link
+    (kbd "C-x /") 'dired-narrow-regexp
+    (kbd ".") 'consult-line
+    (kbd "K") 'dired-kill-subdir
+    (kbd "f") 'evil-avy-goto-line-below ;; 2024-01-25 useful
+    (kbd "h") 'dired-up-directory
+    (kbd "l") 'dired-find-alternate-file
+    (kbd "S-SPC") 'dired-toggle-marks
+    ;; <normal-state> RET            dired-find-file
+    ;; <normal-state> S-<return>     dired-find-file-other-window
+    )
+  )
+
 ;;; vertico
 
 (with-eval-after-load 'vertico

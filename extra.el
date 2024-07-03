@@ -28,21 +28,30 @@
       which-key-idle-secondary-delay 0.01
       which-key-max-description-length 32
       which-key-sort-order 'which-key-key-order-alpha
+      which-key-min-display-lines 6
       which-key-allow-evil-operators t)
-
-;;; fringe
-
-(when (display-graphic-p) ;; gui
-  (set-fringe-mode 10) ;; Give some breathing room
-  (pixel-scroll-precision-mode 1) ;; default nil
-  )
 
 ;;; TODO diff-hl
 
-;; (use-package diff-hl
-;;   :config
-;;   (evil-set-initial-state 'diff-hl-show-hunk-posframe--transient-mode 'motion)
-;;   (global-diff-hl-mode))
+(use-package diff-hl
+  ;; :vc (diff-hl :url "git@github.com:whhone/diff-hl.git" :branch "with-editor-fix")
+  :init
+  (global-diff-hl-mode)
+  :config
+  ;; Added in https://github.com/dgutov/diff-hl/pull/207
+  (setq diff-hl-update-async t)
+
+  ;; Disable async in `with-editor-mode'.
+  ;; https://github.com/dgutov/diff-hl/issues/213
+  (add-hook 'find-file-hook
+            (lambda ()
+              (when (bound-and-true-p with-editor-mode)
+                (setq-local diff-hl-update-async nil))))
+
+  (diff-hl-flydiff-mode +1)
+  :hook
+  (magit-pre-refresh . diff-hl-magit-pre-refresh)
+  (magit-post-refresh . diff-hl-magit-post-refresh))
 
 ;;; dired
 
@@ -397,5 +406,16 @@
 
   (tab-bar-history-mode +1)
   )
+
+;;; fringe and menu
+
+(when (display-graphic-p) ;; gui
+  (set-fringe-mode 10) ;; Give some breathing room
+  (pixel-scroll-precision-mode 1) ;; default nil
+
+  ;; 1) 기본 메뉴를 이용해 본다.
+  (context-menu-mode 1)
+  )
+
 
 ;;; extra.el ends here

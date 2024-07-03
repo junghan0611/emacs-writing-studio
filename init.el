@@ -731,11 +731,150 @@
   :bind
   ("C-x r D" . bookmark-delete))
 
-;;; custom
 
-;;;; configs values
+;;; USER-CONFIGURATION
 
+;;;; Load 'Per-Machine'
+
+;; Most of my per-environment config done via =customize= and is in .custom.el.
+;; However, some config is more involved, such as packages I just want in one
+;; environment and not the others.  To that end, let's load a file that can contain
+;; those customizations.
+(let ((per-machine-filename (concat user-emacs-directory "per-machine.el")))
+  (when (file-exists-p per-machine-filename)
+    (load-file per-machine-filename)))
+
+;;;; Basics
+
+;; (setq-default display-line-numbers-width-start t) ; doom's default t
+(setq inhibit-compacting-font-caches t)
 (setq inhibit-startup-screen t)
+
+;; Stop asking abount following symlinks to version controlled files
+(setq vc-follow-symlinks t)
+
+;; default 120 emacs-29, 60 emacs-28
+(setq kill-ring-max 30) ; keep it small
+
+;; Disable .# lock files
+(setq create-lockfiles nil)
+
+;; Ridiculous path view is vanilla emacs. change truename!
+;; truename 을 원하지 않는다. 심볼링링크대로 쓰고 싶다. nil 로 사용한다.
+(setq find-file-visit-truename t)
+
+;; Show recursion depth in minibuffer (see `enable-recursive-minibuffers')
+(minibuffer-depth-indicate-mode 1) ;; default nil
+
+;; Shr group: Simple HTML Renderer 를 의미한다. 여기 설정을 바꾸면 faces 를 수정할 수 있음
+(setq shr-use-fonts nil)
+
+;; buffer size 를 표기 합니다.
+(setq size-indication-mode t)
+
+;; http://yummymelon.com/devnull/surprise-and-emacs-defaults.html
+;;텍스트를 선택한 다음 그 위에 입력하면 해당 텍스트가 삭제되어야 합니다.
+;;놀랍게도 기본 Emac 에서는 이 동작이 기본적으로 제공되지 않습니다. 명시적으로
+;;활성화해야 합니다.
+(setq delete-selection-mode t) ; default nil
+;; (setq magit-save-repository-buffers 'dontask) ; default t
+
+;; Show a message when garbage collection happens? Useful while tuning the GC
+;; (setq garbage-collection-messages t)
+
+;; (setq ring-bell-function 'ignore)
+
+;;;; Tab-width
+
+;; ====== Buffer-local variables ======
+(setq-default
+ ;; Display long lines
+ truncate-lines nil ; default t
+ ;; Default fill column width
+ fill-column 80
+ ;; Never mix, use only spaces
+ indent-tabs-mode nil ;; Width for line numbers display-line-numbers-width 4
+
+ ;; 1) per major-mode config or hook
+ ;; 2) editorconfig
+ ;; 3) tab-width 4 (below)
+ ;; tab-width 4 ;; 2024-03-11 org-mode element-cache 사용 시 무조건 8이다. 충돌난다. 끈다.
+
+ display-line-numbers-width-start t ; 2024-06-26
+ )
+
+;;;; Display-Line-Numbers-Mode
+
+(column-number-mode)
+(setq display-line-numbers-type 'relative)
+
+;; (dolist (mode '(term-mode-hook
+;;                 shell-mode-hook
+;;                 eshell-mode-hook
+;;                 vterm-mode-hook))
+;;   (add-hook mode #'my/disable-line-numbers))
+
+;; (add-hook 'org-mode-hook 'display-line-numbers-mode)
+;; (add-hook 'markdown-mode-hook 'display-line-numbers-mode)
+(add-hook 'prog-mode-hook 'display-line-numbers-mode)
+
+;;;; Time
+
+(require 'time)
+(setq display-time-format " | %a %e %b, %H:%M | ")
+;; Covered by `display-time-format'
+;; (setq display-time-24hr-format t)
+;; (setq display-time-day-and-date t)
+(setq display-time-interval 30) ; default 60
+(setq display-time-default-load-average nil)
+
+;; NOTE 2022-09-21: For all those, I have implemented my own solution
+;; that also shows the number of new items, although it depends on
+;; notmuch: the `notmuch-indicator' package.
+(setq display-time-mail-directory nil)
+(setq display-time-mail-function nil)
+(setq display-time-use-mail-icon nil)
+(setq display-time-mail-string nil)
+(setq display-time-mail-face nil)
+
+;; World clock
+(setq zoneinfo-style-world-list
+      '(("America/Los_Angeles" "Los Angeles")
+        ("America/Chicago" "Chicago")
+        ("Brazil/Acre" "Rio Branco")
+        ("America/New_York" "New York")
+        ("Brazil/East" "Brasília")
+        ("Europe/Lisbon" "Lisbon")
+        ("Europe/Brussels" "Brussels")
+        ("Europe/Athens" "Athens")
+        ("Asia/Tbilisi" "Tbilisi")
+        ("Asia/Yekaterinburg" "Yekaterinburg")
+        ("Asia/Shanghai" "Shanghai")
+        ("Asia/Seoul" "Seoul")
+        ("Asia/Vladivostok" "Vladivostok")))
+
+;; All of the following variables are for Emacs 28
+(setq world-clock-list t)
+(setq world-clock-time-format "%R %z  %A %d %B")
+(setq world-clock-buffer-name "*world-clock*") ; Placement handled by `display-buffer-alist'
+(setq world-clock-timer-enable t)
+(setq world-clock-timer-second 60)
+
+;;;; Calendar
+
+(require 'calendar)
+;; (setq org-agenda-start-on-weekday nil)
+(add-hook 'calendar-today-visible-hook 'calendar-mark-today)
+(setq calendar-date-style 'iso ;; YYYY/MM/DD
+      calendar-mark-holidays-flag t
+      calendar-week-start-day 1 ;; 0 Sunday, 1 Monday
+      calendar-mark-diary-entries-flag nil
+      calendar-latitude user-calendar-latitude
+      calendar-longitude user-calendar-longitude
+      calendar-location-name user-calendar-location-name
+      calendar-time-display-form
+      '(24-hours ":" minutes
+        (if time-zone " (") time-zone (if time-zone ")")))
 
 ;;;; completion
 
@@ -1050,11 +1189,13 @@ targets."
 
 ;;;; outli
 
-(progn 
-  (unless (package-installed-p 'outli)
-    (package-vc-install "https://github.com/jdtsmith/outli"))
+(unless (package-installed-p 'outli)
+  (package-vc-install "https://github.com/jdtsmith/outli"))
 
+(progn
   (require 'outli)
+
+  ;; :vc (outli :url "https://github.com/jdtsmith/outli")
   (setq outli-speed-commands nil)
   ;; (add-to-list 'outli-heading-config '(tex-mode "%%" ?% t))
   (add-to-list 'outli-heading-config '(js2-mode "//" ?\/ t))
@@ -1164,6 +1305,33 @@ targets."
    )
   )
 
+;;; Winum
+
+(use-package winum
+  :init
+  (setq winum-scope                      'frame-local
+	winum-auto-assign-0-to-minibuffer t
+	winum-reverse-frame-list          nil
+	winum-auto-setup-mode-line nil
+	winum-ignored-buffers '(" *LV*" " *which-key*"))
+  :config
+  (define-key winum-keymap (kbd "M-0") 'winum-select-window-0-or-10)
+  (define-key winum-keymap (kbd "M-1") 'winum-select-window-1)
+  (define-key winum-keymap (kbd "M-2") 'winum-select-window-2)
+  (define-key winum-keymap (kbd "M-3") 'winum-select-window-3)
+  (define-key winum-keymap (kbd "M-4") 'winum-select-window-4)
+  (define-key winum-keymap (kbd "M-5") 'winum-select-window-5)
+  (define-key winum-keymap (kbd "M-6") 'winum-select-window-6)
+  (define-key winum-keymap (kbd "M-7") 'winum-select-window-7)
+  (define-key winum-keymap (kbd "M-8") 'winum-select-window-8)
+  (define-key winum-keymap (kbd "M-9") 'winum-select-window-9)
+
+  (define-key winum-keymap
+	      [remap winum-select-window-9] #'switch-to-minibuffer-window)
+
+  (winum-mode 1)
+  )
+
 ;;; load files
 
 ;; (load-file (concat (file-name-as-directory user-emacs-directory) "meow.el"))
@@ -1193,6 +1361,26 @@ targets."
 (corkey-mode 1)
 ;; Automatically pick up keybinding changes
 (corkey/load-and-watch)
+
+;;; easy mode
+
+;;;; context-mode 
+
+;;;; menu-bar
+
+(menu-bar-mode 1)
+
+;;;; casual-suite
+(use-package casual-suite
+  :defer 1
+  :config
+  (define-key Info-mode-map (kbd "<f2>") #'casual-info-tmenu)
+  (global-set-key (kbd "M-g v") 'casual-avy-tmenu)
+  (define-key dired-mode-map (kbd "<f2>") #'casual-dired-tmenu)
+  (define-key calc-mode-map (kbd "<f2>") #'casual-calc-tmenu)
+  (define-key isearch-mode-map (kbd "<f2>") #'casual-isearch-tmenu)
+  ;; ibuffer-mode-map
+  )
 
 ;;; Default Workspaces
 
