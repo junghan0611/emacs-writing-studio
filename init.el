@@ -376,6 +376,7 @@
 ;; Emacs Multimedia System
 
 (use-package emms
+  :if window-system
   :init
   (require 'emms-setup)
   (require 'emms-mpris)
@@ -1062,11 +1063,8 @@ targets."
   )
 
 (use-package embark-consult
-  :demand t
-  :after (consult embark)
   :hook
-  (embark-collect-mode . consult-preview-at-point-mode)
-  )
+  (embark-collect-mode . consult-preview-at-point-mode))
 
 ;;;; tempel
 
