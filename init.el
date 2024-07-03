@@ -746,6 +746,22 @@
   (when (file-exists-p per-machine-filename)
     (load-file per-machine-filename)))
 
+;;;; Overide path and configs
+
+(setq ews-bibtex-directory (concat user-org-directory "bib"))
+(setq ews-hunspell-dictionaries "ko_KR")
+(setq rmh-elfeed-org-files (concat user-org-directory "elfeed.org"))
+(setq denote-directory user-org-directory)
+
+(setq citar-bibliography config-bibfiles)
+;; use #+cite_export: csl apa.csl
+(setq org-cite-csl-styles-dir (concat user-org-directory ".csl"))
+(setq citar-citeproc-csl-styles-dir (concat user-org-directory ".csl"))
+;; (setq citar-citeproc-csl-locales-dir "~/.csl/locales")
+(setq citar-citeproc-csl-style "apa.csl") ; ieee.csl
+(setq citar-notes-paths '("~/sync/org/bib/"))
+(setq org-cite-global-bibliography config-bibfiles)
+
 ;;;; Load Evil
 
 (load-file (concat (file-name-as-directory user-emacs-directory) "evil.el"))
@@ -1013,9 +1029,9 @@
   (with-eval-after-load 'which-key
     (defun embark-which-key-indicator ()
       "An embark indicator that displays keymaps using which-key.
-The which-key help message will show the type and value of the
-current target followed by an ellipsis if there are further
-targets."
+      The which-key help message will show the type and value of the
+      current target followed by an ellipsis if there are further
+      targets."
       (lambda (&optional keymap targets prefix)
         (if (null keymap)
             (which-key--hide-popup-ignore-command)
@@ -1215,11 +1231,11 @@ targets."
   (add-to-list 'outli-heading-config '(bash-ts-mode "##" ?# t))
 
   (add-to-list 'outli-heading-config '(clojure-mode ";;" ?\; t))
-  (add-to-list 'outli-heading-config '(clojurescript-mode ";;" ?\; t))
+      (add-to-list 'outli-heading-config '(clojurescript-mode ";;" ?\; t))
 
-  (add-hook 'prog-mode-hook 'outli-mode) ; not markdown-mode!
-  ;; (add-hook 'org-mode-hook 'outli-mode)
-  )
+      (add-hook 'prog-mode-hook 'outli-mode) ; not markdown-mode!
+      ;; (add-hook 'org-mode-hook 'outli-mode)
+      )
 
 ;;;; pcre2el
 
@@ -1394,6 +1410,7 @@ targets."
 ;; (load-file (concat (file-name-as-directory user-emacs-directory) "meow.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "extra.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "core-funcs.el"))
+;; (load-file (concat (file-name-as-directory user-emacs-directory) "org-config.el"))
 
 ;;; IDE
 
@@ -1544,6 +1561,63 @@ targets."
   )
 
 ;;;; TODO sly for common-lisp
+
+;;;; emacs-lisp-mode-hook
+
+(add-hook 'emacs-lisp-mode-hook (lambda ()
+                                  ;; Emacs' built-in elisp files use a hybrid tab->space indentation scheme
+                                  ;; with a tab width of 8. Any smaller and the indentation will be
+                                  ;; unreadable. Since Emacs' lisp indenter doesn't respect this variable it's
+                                  ;; safe to ignore this setting otherwise.
+                                  ;; (setq-local tab-width 8)
+                                  (setq-local comment-column 0)
+                                  (define-key emacs-lisp-mode-map (kbd "M-[") 'backward-sexp)
+                                  (define-key emacs-lisp-mode-map (kbd "M-]") 'forward-sexp)))
+
+;;; Journal 
+
+;;;; org-journal
+
+(use-package org-journal
+  :commands (org-journal-new-entry org-journal-search-forever)
+  :config
+  (setq org-journal-dir (concat user-org-directory "journal"))
+  (setq org-journal-date-format "%Y-%m-%d(%a)")
+  (setq org-journal-file-format "%Y%m%dT000000--%Y-%m-%d__journal.org")
+  (setq org-journal-time-prefix "* ")
+  (setq org-journal-date-prefix "
+:PROPERTIES:
+:DRINKS:
+:PHONE:
+:KETO:
+:EXERCISE:
+:MOOD:
+:END:
+#+title: ")
+  ;; org-journal-skip-carryover-drawers (list "LOGBOOK")
+  ;; (setq org-journal-enable-agenda-integration t)
+  )
+
+;; #+date: [%<%Y-%m-%d %a %H:%M>]\n#+filetags: :journal:\n#+identifier: %<%Y%m%dT000000>\n#+description:\n#+category: Journal\n#+startup: fold\n# #+glossary_sources: global
+;; #+BEGIN: clocktable :scope agenda :maxlevel 2 :step day :fileskip0 true :tstart \"%<%Y-%m-%d>\" :tend \"%(my/tomorrow)\"
+;; #+END:
+
+;; (defun org-journal-file-header-func (time)
+;;   "Custom function to create journal header."
+;;   (concat
+;;    (pcase org-journal-file-type
+;;      (`daily "#+TITLE: Daily Journal\n#+STARTUP: showeverything"
+;;              (`weekly "#+TITLE: Weekly Journal\n#+STARTUP: folded")
+;;              (`monthly "#+TITLE: Monthly Journal\n#+STARTUP: folded")
+;;              (`yearly "#+TITLE: Yearly Journal\n#+STARTUP: folded")))))
+;; (setq org-journal-file-header 'org-journal-file-header-func)
+
+;;;; org-journal-tags
+
+(use-package org-journal-tags
+  :after (org-journal)
+  :config
+  (org-journal-tags-autosync-mode))
 
 ;;; Keybindings
 

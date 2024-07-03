@@ -1,4 +1,4 @@
-;;; core-funcs.elG -*- lexical-binding: t; -*-
+;;; core-funcs.el -*- lexical-binding: t; -*-
 ;;
 ;; Copyright (C) 2024 Junghan Kim
 ;;
