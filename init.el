@@ -30,6 +30,8 @@
 ;;
 ;;; Code:
 
+(setq debug-on-error t)
+
 ;; Emacs 29? EWS leverages functionality from the latest Emacs version.
 
 (when (< emacs-major-version 29)
@@ -133,8 +135,6 @@
 
 (use-package modus-themes
   :custom
-  (modus-themes-italic-constructs t)
-  (modus-themes-bold-constructs t)
   ;; (modus-themes-mixed-fonts t)
   (modus-themes-to-toggle
    '(modus-operandi modus-vivendi-tinted))
@@ -143,7 +143,94 @@
   :bind
   (("C-c w t t" . modus-themes-toggle)
    ("C-c w t m" . modus-themes-select)
-   ("C-c w t s" . consult-theme)))
+   ("C-c w t s" . consult-theme))
+  :init
+  (setq modus-themes-italic-constructs t
+        modus-themes-bold-constructs t
+        modus-themes-custom-auto-reload t
+
+        ;; Options for `modus-themes-prompts' are either nil (the
+        ;; default), or a list of properties that may include any of those
+        ;; symbols: `italic', `WEIGHT'
+        ;; modus-themes-prompts '(bold)
+
+        ;; The `modus-themes-completions' is an alist that reads two
+        ;; keys: `matches', `selection'.  Each accepts a nil value (or
+        ;; empty list) or a list of properties that can include any of
+        ;; the following (for WEIGHT read further below):
+        ;; `matches'   :: `underline', `italic', `WEIGHT'
+        ;; `selection' :: `underline', `italic', `WEIGHT'
+        ;; modus-themes-completions
+        ;; '((matches   . (semibold))
+        ;;   (selection . (semibold text-also)))
+
+        modus-themes-common-palette-overrides
+        `((fg-mode-line-active fg-main) ; Black
+
+          ;; Comments are yellow, strings are green
+          (comment yellow-cooler)
+          (string green-warmer)
+
+          ;; "Make the mode line borderless"
+          (border-mode-line-active unspecified)
+          (border-mode-line-inactive unspecified)
+
+          ;; "Make matching parenthesis more or less intense"
+          (bg-paren-match bg-magenta-intense)
+          (underline-paren-match unspecified)
+
+          ;; Intense magenta background combined with the main foreground
+          ;; (bg-region bg-magenta-subtle)
+          ;; (fg-region fg-main)
+
+          ;; Links
+          ;; (underline-link border)
+          ;; (underline-link-visited border)
+          ;; (underline-link-symbolic border)
+
+          (bg-heading-0 bg-green-subtle) ; green
+          (bg-heading-1 bg-dim)
+          (bg-heading-2 bg-yellow-subtle)
+          (bg-heading-3 bg-blue-nuanced) ; blue
+
+          ;; copy from intense
+          (overline-heading-0 unspecified)
+          (overline-heading-1 magenta-cooler)
+          (overline-heading-2 magenta-warmer)
+
+          ;; And expand the preset here. Note that the ,@ works because we use
+          ;; the backtick for this list, instead of a straight quote.
+          ;; ,@modus-themes-preset-overrides-faint
+          ;; ,@modus-themes-preset-overrides-intense
+          ))
+
+  :config
+  (defun my/modus-themes-custom-faces ()
+    (interactive)
+    ;; (message "modus-themes-after-hook : my-modus-themes-custom-faces")
+    (modus-themes-with-colors
+      (custom-set-faces
+       ;; `(tab-bar ((,c :background ,bg-tab-bar)))
+       ;; `(tab-bar-tab-group-current ((,c :inherit bold :background ,bg-tab-current :box (:line-width -2 :color ,bg-tab-current) :foreground ,fg-alt)))
+       ;; `(tab-bar-tab-group-inactive ((,c :background ,bg-tab-bar :box (:line-width -2 :color ,bg-tab-bar) :foreground ,fg-alt)))
+       ;; `(tab-bar-tab ((,c :inherit bold :box (:line-width -2 :color ,bg-tab-current) :background ,bg-tab-current)))
+       ;; `(tab-bar-tab-inactive ((,c :box (:line-width -2 :color ,bg-tab-other) :background ,bg-tab-other)))
+       ;; `(tab-bar-tab-ungrouped ((,c :inherit tab-bar-tab-inactive)))
+       ;; `(fringe ((,c :background ,bg-dim)))
+
+       `(vterm-color-black ((,c :background "gray25" :foreground "gray25")))
+       `(vterm-color-yellow ((,c :background ,yellow-intense :foreground ,yellow-intense)))
+       `(org-mode-line-clock ((,c :inherit bold :foreground ,modeline-info)))
+       `(org-mode-line-clock-overrun ((,c :inherit bold :foreground ,modeline-err)))
+       ;; `(jinx-misspelled ((,c :underline (:style wave :color ,magenta-cooler))))
+       ;; `(keycast-command ((,c :inherit default :height 0.9)))
+       ))
+    (when (display-graphic-p) ; gui
+      (when (locate-library "spacious-padding")
+        (spacious-padding-mode +1)))
+    )
+  (add-hook 'modus-themes-post-load-hook #'my/modus-themes-custom-faces)
+  )
 
 ;; (use-package mixed-pitch
 ;;   :hook
@@ -746,6 +833,54 @@
 
 ;;; USER-CONFIGURATION
 
+;;;; Path
+
+(setq user-dotemacs-dir user-emacs-directory)
+
+(setq emacs-type 'vanillaemacs)
+
+(defun my/org-emacs-config-file () (expand-file-name "README.org" user-dotemacs-dir))
+
+;; optimize: force "lisp"" and "site-lisp" at the head to reduce the startup time.
+;; (dolist (dir '("menu" "site-lisp"))
+;;   (push (expand-file-name dir user-dotemacs-dir) load-path))
+
+;;;; Termux
+
+(setq-default root-path "/")
+
+(defvar IS-TERMUX
+  (string-suffix-p "Android" (string-trim (shell-command-to-string "uname -a"))))
+
+(when IS-TERMUX
+  (setq root-path "/data/data/com.termux/files/"))
+
+(setq my/slow-ssh
+      (or
+       (string= (getenv "IS_TRAMP") "true")))
+
+(setq my/remote-server
+      (or (string= (getenv "IS_REMOTE") "true")
+          ;; (string-suffix-p "Android" (string-trim (shell-command-to-string "uname -a")))
+          (string= (system-name) "server1")
+          (string= (system-name) "server2")
+          (string= (system-name) "server3"))) ; for test
+
+(setenv "IS_EMACS" "true")
+
+;;;; PGTK
+
+;; You should be able to use input methods since GtkIMContext is enabled by
+;; default. If you don't like GtkIMContext, you can disable it by writing as
+;; follows in ~/.emacs: pgtk-use-im-context disable gtk im modules for
+;; emacs-pgtk, add "Emacs*UseXIM: false" to ~/.Xresources to disable xim
+(if (eq window-system 'pgtk)
+    (pgtk-use-im-context nil))
+
+(when (boundp 'pgtk-use-im-context-on-new-connection)
+  (setq pgtk-use-im-context-on-new-connection nil))
+
+
 ;;;; Load 'Per-Machine'
 
 ;; Most of my per-environment config done via =customize= and is in .custom.el.
@@ -760,7 +895,6 @@
 
 (setq ews-bibtex-directory (concat user-org-directory "bib"))
 (setq ews-hunspell-dictionaries "ko_KR")
-(setq rmh-elfeed-org-files (concat user-org-directory "elfeed.org"))
 (setq denote-directory user-org-directory)
 
 (setq citar-bibliography config-bibfiles)
@@ -771,6 +905,7 @@
 (setq citar-citeproc-csl-style "apa.csl") ; ieee.csl
 (setq citar-notes-paths '("~/sync/org/bib/"))
 (setq org-cite-global-bibliography config-bibfiles)
+
 
 ;;;; Load Evil
 
@@ -902,7 +1037,7 @@
       calendar-location-name user-calendar-location-name
       calendar-time-display-form
       '(24-hours ":" minutes
-        (if time-zone " (") time-zone (if time-zone ")")))
+                 (if time-zone " (") time-zone (if time-zone ")")))
 
 ;;;; completion
 
@@ -949,29 +1084,29 @@
 
   (defvar consult--source-project-file
     `(:name     "Project File"
-      :narrow   ?f
-      :category file
-      :face     consult-file
-      :history  file-name-history
-      :state    ,#'consult--file-state
-      :enabled  ,(lambda () consult-project-function)
-      :items
-      ,(lambda ()
-         (when-let (project (project-current t))
-           (let* ((all-files (project-files project))
-                  (common-parent-directory
-                   (let ((common-prefix (try-completion "" all-files)))
-                     (if (> (length common-prefix) 0)
-                         (file-name-directory common-prefix))))
-                  (cpd-length (length common-parent-directory))
-                  items)
-             (print all-files)
-             (dolist (file all-files items)
-               (let ((part (substring file cpd-length)))
-                 (when (equal part "") (setq part "./"))
-                 (put-text-property 0 1 'multi-category `(file . ,file) part)
-                 (push part items))))))
-      "Project file candidate source for `consult-buffer'."))
+                :narrow   ?f
+                :category file
+                :face     consult-file
+                :history  file-name-history
+                :state    ,#'consult--file-state
+                :enabled  ,(lambda () consult-project-function)
+                :items
+                ,(lambda ()
+                   (when-let (project (project-current t))
+                     (let* ((all-files (project-files project))
+                            (common-parent-directory
+                             (let ((common-prefix (try-completion "" all-files)))
+                               (if (> (length common-prefix) 0)
+                                   (file-name-directory common-prefix))))
+                            (cpd-length (length common-parent-directory))
+                            items)
+                       (print all-files)
+                       (dolist (file all-files items)
+                         (let ((part (substring file cpd-length)))
+                           (when (equal part "") (setq part "./"))
+                           (put-text-property 0 1 'multi-category `(file . ,file) part)
+                           (push part items))))))
+                "Project file candidate source for `consult-buffer'."))
 
   (defvar consult--source-project-file-hidden
     `(:hidden t :narrow (?f . "Project File") ,@consult--source-project-file)
@@ -1237,11 +1372,11 @@
   (add-to-list 'outli-heading-config '(bash-ts-mode "##" ?# t))
 
   (add-to-list 'outli-heading-config '(clojure-mode ";;" ?\; t))
-      (add-to-list 'outli-heading-config '(clojurescript-mode ";;" ?\; t))
+  (add-to-list 'outli-heading-config '(clojurescript-mode ";;" ?\; t))
 
-      (add-hook 'prog-mode-hook 'outli-mode) ; not markdown-mode!
-      ;; (add-hook 'org-mode-hook 'outli-mode)
-      )
+  (add-hook 'prog-mode-hook 'outli-mode) ; not markdown-mode!
+  ;; (add-hook 'org-mode-hook 'outli-mode)
+  )
 
 ;;;; pcre2el
 
@@ -1515,22 +1650,6 @@
 (load-file (concat (file-name-as-directory user-emacs-directory) "core-funcs.el"))
 ;; (load-file (concat (file-name-as-directory user-emacs-directory) "org-config.el"))
 
-;;; Note-Tacking
-
-(use-package denote-sections)
-
-;;;; DONT org-node
-
-;; (unless (package-installed-p 'org-node)
-;;   (package-vc-install "https://github.com/meedstrom/org-node"))
-
-;; (use-package org-node
-;;   :hook (org-mode . org-node-cache-mode))
-
-;; (global-set-key (kbd "M-s f") #'org-node-find)
-;; (global-set-key (kbd "M-s i") #'org-node-insert-link)
-
-
 ;;; IDE
 
 ;;;; treesit-auto
@@ -1744,6 +1863,1138 @@
 ;;   :config
 ;;   (org-journal-tags-autosync-mode))
 
+;;; Note-Tacking
+
+;;;; use-package
+
+(use-package denote-sections)
+(use-package org-pomodoro)
+(use-package org-cliplink)
+;; (use-package org-download)
+;; (use-package async)
+
+;;;; Load Org-mode
+
+(with-eval-after-load 'org
+
+  (global-unset-key (kbd "<f10>"))
+
+  (setq org-crypt-key (car epa-file-encrypt-to))
+  (message "`org-directory' has been set to: %s" org-directory)
+
+  ;; Adding a "/" so that =find-file= finds the files under =~/org/=.
+  ;;
+  ;; The org-directory is computed based on user-emacs-directory.
+  ;; - ".emacs.d" -> "~/org/"
+  ;; - ".emacs.d-personal" -> "~/org-personal/"
+  ;;(concat "~/org" (nth 1 (split-string user-emacs-directory "emacs.d"))))
+  ;; (setq org-directory
+  ;;       (concat "~/org" (nth 1 (split-string dotspacemacs-directory
+  ;;                                            "spacemacs.d"))))
+
+;;;; My Style
+
+  (setq org-enforce-todo-dependencies t)
+  (setq org-cycle-separator-lines 0)
+
+  (setq org-insert-heading-respect-content nil)
+
+  ;; 리버스 순서가 익숙하다.
+  (setq org-reverse-note-order t) ; default nil
+
+  (setq org-show-following-heading t)
+  (setq org-show-hierarchy-above t)
+
+  (setq org-special-ctrl-a/e t) ; doom t
+  (setq org-special-ctrl-k nil) ; doom nil
+  (setq org-yank-adjusted-subtrees t)
+
+  ;; 22/10/11--22:18 :: headline 설정 좋다.
+  ;; (setq org-fontify-todo-headline nil) ; default nil
+  ;; (setq org-fontify-done-headline nil) ; doom t
+  (setq org-fontify-whole-heading-line nil) ; doom t
+
+  (defvar bh/insert-inactive-timestamp t)
+
+  (defun bh/toggle-insert-inactive-timestamp ()
+    (interactive)
+    (setq bh/insert-inactive-timestamp (not bh/insert-inactive-timestamp))
+    (message "Heading timestamps are %s" (if bh/insert-inactive-timestamp "ON" "OFF")))
+
+  (defun bh/insert-inactive-timestamp ()
+    (interactive)
+    (org-insert-time-stamp nil t t nil nil nil))
+
+  (defun bh/insert-heading-inactive-timestamp ()
+    (save-excursion
+      (when bh/insert-inactive-timestamp
+        (org-return)
+        (org-cycle)
+        (bh/insert-inactive-timestamp))))
+
+  ;; 2024-02-24 turn-off
+  ;; (add-hook 'org-insert-heading-hook 'bh/insert-heading-inactive-timestamp 'append)
+
+  (setq org-return-follows-link t)
+
+  (setq org-tags-match-list-sublevels t)
+  (setq org-agenda-persistent-filter t)
+
+  (setq org-export-coding-system 'utf-8)
+  (prefer-coding-system 'utf-8)
+  (set-charset-priority 'unicode)
+  (setq default-process-coding-system '(utf-8-unix . utf-8-unix))
+  (setq org-time-clocksum-format
+        '(:hours "%d" :require-hours t :minutes ":%02d" :require-minutes t))
+
+  (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id)
+
+  ;; Resume clocking task when emacs is restarted
+  (org-clock-persistence-insinuate)
+
+  ;; Show lot of clocking history so it's easy to pick items off the C-F11 list
+  (setq org-clock-history-length 23) ; doom default 20
+  ;; Resume clocking task on clock-in if the clock is open
+  (setq org-clock-in-resume t) ; doom default t
+
+  ;; Separate drawers for clocking and logs
+  (setq org-drawers (quote ("PROPERTIES" "LOGBOOK")))
+  ;; Save clock data and state changes and notes in the LOGBOOK drawer
+  (setq org-clock-into-drawer t)
+  ;; Sometimes I change tasks I'm clocking quickly - this removes clocked tasks with 0:00 duration
+  (setq org-clock-out-remove-zero-time-clocks t) ; doom default t
+  ;; Clock out when moving task to a done state
+  (setq org-clock-out-when-done t)
+  ;; Save the running clock and all clock history when exiting Emacs, load it on startup
+  (setq org-clock-persist t) ; doom 'history
+  ;; Enable auto clock resolution for finding open clocks
+  (setq org-clock-auto-clock-resolution (quote when-no-clock-is-running))
+  ;; Include current clocking task in clock reports
+  (setq org-clock-report-include-clocking-task t)
+
+  ;; ex) 2022-09-19 (월)
+  (setq org-agenda-format-date "%Y-%m-%d (%a)")
+
+  (defun bh/make-org-scratch ()
+    (interactive)
+    (find-file (concat org-directory "/scratch.org"))
+    ;; (gnus-make-directory "/tmp/publish")
+    )
+
+  (defun bh/make-markdown-scratch ()
+    (interactive)
+    (find-file (concat org-directory "/md/scratch.md"))
+    ;; (gnus-make-directory "/tmp/publish")
+    )
+
+  (defun bh/switch-to-scratch ()
+    (interactive)
+    (switch-to-buffer "*scratch*"))
+
+  (defun ash-goto-org-agenda (&optional _)
+    (interactive)
+    (let ((buf (get-buffer "*Org Agenda(n)*")))
+      (tab-bar-switch-to-tab "time")
+      (if buf
+          (progn (switch-to-buffer buf)
+                 (delete-other-windows))
+        (progn
+          ;; (when (locate-library "org-roam")
+          ;;   (require 'org-roam)
+          ;;   (org-roam-db-sync))
+
+          (org-agenda nil "n")
+          (org-agenda-goto-today)
+          (spacemacs/toggle-current-window-dedication) ; spacemacs Compatibility
+          )
+        )))
+
+;;;; global map
+
+  (global-set-key (kbd "C-c l") 'org-store-link)
+  (global-set-key (kbd "C-c i") 'org-insert-link)
+  ;; (global-set-key (kbd "C-c a") 'ash-goto-org-agenda)
+
+  ;; Sets default-directory to org-directory so that =M-x magit= from the agenda view does not ask me for a dir.
+  (global-set-key (kbd "C-c a") 'org-agenda)
+  ;; (global-set-key (kbd "C-c A")
+  ;;                 (lambda () (interactive) (let ((default-directory org-directory)) (org-agenda))))
+
+  (global-set-key (kbd "C-c c") 'org-capture)
+  (global-set-key (kbd "C-c \\") 'org-tags-sparse-tree)
+
+  ;; (global-unset-key (kbd "<f6>"))
+  ;; (global-set-key (kbd "<C-f6>") #'(lambda () (interactive) (bookmark-set "SAVED")))
+  ;; (global-set-key (kbd "<f6>") #'(lambda () (interactive) (bookmark-jump "SAVED")))
+
+  (global-set-key (kbd "<f10> c") 'calendar)
+
+  (global-set-key (kbd "<f10> o") 'bh/make-org-scratch)
+  (global-set-key (kbd "<f10> O") 'bh/make-markdown-scratch)
+
+  (global-set-key (kbd "<f10> s") 'bh/switch-to-scratch)
+
+  (global-set-key (kbd "<f10> t") 'bh/insert-inactive-timestamp)
+  (global-set-key (kbd "<f10> T") 'bh/toggle-insert-inactive-timestamp)
+
+  (global-set-key (kbd "<f10> v") 'visible-mode)
+  (global-set-key (kbd "<f10> l") 'org-toggle-link-display)
+  (global-set-key (kbd "C-<f10>") 'previous-buffer)
+  (global-set-key (kbd "M-<f10>") 'org-toggle-inline-images)
+  (global-set-key (kbd "C-x n r") 'narrow-to-region)
+  ;; (global-set-key (kbd "C-<f10>") 'next-buffer)
+
+  (global-set-key (kbd "<f10> 9") 'org-clock-goto)
+  (global-set-key (kbd "<f10> <f10>") 'org-clock-goto)
+
+  (global-set-key (kbd "<f10> h") 'outline-hide-other)
+  (global-set-key (kbd "<f10> k") 'my/get-id-to-clipboard)
+  (global-set-key (kbd "<f10> r") 'remember)
+
+  (define-key org-mode-map (kbd "C-M-i") 'completion-at-point)
+
+  ;; with markdown-mode-map
+  (define-key org-mode-map (kbd "<f10> g") 'org-toggle-inline-images)
+  (define-key org-mode-map (kbd "<f10> m") 'my/org-toggle-emphasis-markers)
+
+  (global-set-key (kbd "<f10> f") 'my/logos-focus-editing-toggle)
+
+  (global-set-key (kbd "<f10> p") 'org-pomodoro)
+
+  (global-set-key (kbd "<f10> i") 'org-clock-in)
+  (global-set-key (kbd "<f10> I") 'org-clock-in-last)
+
+  ;; ;;;###autoload
+  ;; (defun my/org-clock-goto (&optional _)
+  ;;   (interactive)
+  ;;   (let ((buf (get-buffer "org-clock-in-now")))
+  ;;     (tab-bar-switch-to-tab "time")
+  ;;     (if buf
+  ;;         (progn (switch-to-buffer buf)
+  ;;                ;; (delete-other-windows)
+  ;;                )
+  ;;       (org-clock-goto)
+  ;;       (rename-buffer "org-clock-in-now")
+  ;;       ))
+
+;;;; shift
+
+  ;; Shift 거슬리는 것을 막아주는 아주 요긴한 설정이다.
+  (setq org-treat-S-cursor-todo-selection-as-state-change nil)
+  (setq org-support-shift-select nil) ; default nil
+  (setq shift-select-mode nil) ; default t
+
+;;;; performance latex-and-related off
+
+  (setq org-highlight-latex-and-related nil) ;; '(latex script entities))
+  (setq org-latex-and-related-regexp nil) ; default nil
+
+;;;; imenu ellipsis bookmark
+
+  ;; Search on https://www.compart.com/en/unicode/U+25BF
+  ;; Unicode Character “◉” (U+25C9)
+  (setq org-capture-bookmark nil)
+  (setq org-ellipsis " ↴") ;; ⚡, ◉, ▼, ↴,
+
+  ;; (setq org-imenu-depth 3) ; default 2
+
+;;;; pretty-entities / bullet lists / image-width
+
+  (setq org-image-actual-width t)
+  (setq org-image-max-width (min (/ (display-pixel-width) 3) 640))
+
+  ;; Org styling, hide markup etc. 테스트
+  ;; 왜 minemacs 는 org-pretty 설정을 둘다 t 로 했을까?  org-pretty-entities 가
+  ;; 설정되면 abc_def 에서 def 가 아래로 기어 들어간다.
+  ;; 2023-10-13: I prefer using M-x org-toggle-pretty-entities instead.
+  (setq org-pretty-entities nil) ; very important
+  ;; orgmode 익스포트 할 때, underscore 가 subscripts 변환 방지
+  ;; http://ohyecloudy.com/emacsian/2019/01/12/org-export-with-sub-superscripts/
+  (setq org-pretty-entities-include-sub-superscripts nil)
+
+  ;; Use utf-8 bullets for bullet lists -- this isn't great, but a bit
+  ;; nicer than nothing. Ideally should use monospace font for spaces
+  ;; before bullet item, and use different bullets by list level.
+  ;; 2024-05-02 replaced by org-modern
+  (font-lock-add-keywords 'org-mode
+                          '(("^ *\\([+]\\) "
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+  (font-lock-add-keywords 'org-mode
+                          '(("^ *\\([-]\\) "
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "◦"))))))
+
+;;;; org-startup-folded
+
+  ;; fold / overview  - collapse everything, show only level 1 headlines
+  ;; content          - show only headlines
+  ;; nofold / showall - expand all headlines except the ones with :archive:
+  ;;                    tag and property drawers
+  ;; showeverything   - same as above but without exceptions
+  ;; #+startup: fold
+  ;; (setq org-startup-folded 'fold) ; show2levels
+  (setq org-agenda-inhibit-startup t) ;; ~50x speedup, doom default t
+
+;;;; org-export
+
+  ;; ;; (setq org-export-preserve-breaks t) ; default nil
+  ;; ;; (setq org-export-with-properties t) ; default nil
+  ;; ;; (setq org-export-use-babel nil) ; default t
+  ;; ;; (setq org-export-with-broken-links t) ; default nil
+
+  (setq org-export-with-smart-quotes nil) ; default nil, doom t
+
+  (setq org-export-headline-levels 5) ; default 3
+  (setq org-publish-use-timestamps-flag t) ; default t
+  (setq org-export-with-section-numbers nil) ; default t
+  (setq org-export-with-toc nil) ; default t - turn off on hugo toc
+  (setq org-export-with-timestamps nil)
+
+  (setq org-export-with-drawers nil) ; default (not "LOGBOOK")
+
+  (setq org-export-with-todo-keywords nil) ; t
+  (setq org-export-with-broken-links t) ; nil
+  (setq org-export-with-toc nil)
+  (setq org-export-date-timestamp-format "%e %B %Y")
+
+  (setq org-export-with-tags 'not-in-toc)
+
+;;;; org-pomodoro
+
+  (require 'org-pomodoro)
+  (setq org-pomodoro-manual-break t)
+  (setq org-pomodoro-format "⌛ %s")
+
+  (defun ash/org-pomodoro-til-meeting ()
+    "Run a pomodoro until the next 30 minute boundary."
+    (interactive)
+    (let ((org-pomodoro-length (mod (- 30 (cadr (decode-time (current-time)))) 30)))
+      (org-pomodoro)))
+
+  ;; from gopar
+  ;; (org-pomodoro-started . gopar/load-window-config-and-close-home-agenda)
+  ;; (org-pomodoro-finished . gopar/save-window-config-and-show-home-agenda))
+  ;; (defun gopar/home-pomodoro ()
+  ;;     (interactive)
+  ;;     (setq org-pomodoro-length 25
+  ;;         org-pomodoro-short-break-length 5))
+
+  ;; (defun gopar/work-pomodoro ()
+  ;;     (interactive)
+  ;;     (setq org-pomodoro-length 60
+  ;;         org-pomodoro-short-break-length 20))
+
+  ;; (defun gopar/save-window-config-and-show-home-agenda ()
+  ;;     (interactive)
+  ;;     (window-configuration-to-register ?`)
+  ;;     (delete-other-windows)
+  ;;     (org-save-all-org-buffers)
+  ;;     (org-agenda nil "h"))
+
+  ;; (defun gopar/load-window-config-and-close-home-agenda ()
+  ;;     (interactive)
+  ;;     (org-save-all-org-buffers)
+  ;;     (jump-to-register ?`)))
+
+;;;; org-clock-sound
+
+  (setq org-clock-sound (concat user-dotemacs-dir "assets/sounds/meditation_bell.wav"))
+
+  ;; async
+  (defun my/play-meditation-bell()
+    "Play meditation-bell"
+    (interactive)
+    (call-process-shell-command "~/.local/bin/play-meditation-bell.sh" nil 0))
+  ;; (global-set-key (kbd "C-c j m") 'my/play-meditation-bell)
+  (add-hook 'org-clock-in-hook 'my/play-meditation-bell 'append)
+  ;; (add-hook 'org-clock-out-hook 'my/play-meditation-bell 'append)
+  ;; (add-hook 'org-clock-goto-hook 'my/play-meditation-bell 'append)
+  ;; (add-hook 'org-clock-cancel-hook 'my/play-meditation-bell 'append)
+  ;; (add-hook 'org-capture-mode-hook 'my/play-meditation-bell 'append)
+
+;;;; org-num
+
+  (require 'org-num)
+  (setq org-num-skip-unnumbered t
+        org-num-skip-commented t
+        org-num-skip-footnotes t
+        org-num-max-level 3)
+  ;; org-num-skip-tags '("nonum" "noexport") ; doom default
+  ;; (add-hook 'org-mode-hook #'org-num-mode)
+
+;;;; org-footnote
+
+  (setq org-footnote-auto-adjust t) ;; renumber footnotes
+
+;;;; org-block and hide leading stars
+
+  ;; Hide ~*~, ~~~ and ~/~ in org text.
+  ;; Org styling, hide markup etc. = / ~
+  (setq org-hide-emphasis-markers nil)
+  (setq org-hide-block-startup nil)
+  (setq org-hide-macro-markers nil)
+
+  (setq org-indent-mode-turns-on-hiding-stars nil) ; default t -- MINE
+  (setq org-indent-mode-turns-off-org-adapt-indentation t) ; must t, default t
+
+  ;; (setq org-level-color-stars-only nil) ; doom nil
+  ;; org-indent-mode 사용하면 org-hide-leading-stars 자동 on
+  (setq org-hide-leading-stars nil) ; doom t
+
+;;;; Indentation
+
+  (setq org-adapt-indentation t)
+  (setq org-startup-indented nil) ; doom t
+  (setq org-src-preserve-indentation nil) ; doom t
+  ;; (setq org-edit-src-content-indentation 0) ; MINE
+
+  ;; Reduce org-indent-indentation-per-level from 2 to 1.
+  ;; This keeps =org-tags-column= the same for all headings.
+  ;; Avoid inconsistency when eidting outside Emacs, like Orgzly and Beorg.
+  ;; (setq org-indent-indentation-per-level 1) ; 2024-06-19 enable, 2024-06-27 turn-off
+
+;;;; defer-font-lock
+
+  (defun locally-defer-font-lock ()
+    "Set jit-lock defer and stealth, when buffer is over a certain size."
+    (when (> (buffer-size) 50000) ; 50kb
+      (setq-local jit-lock-defer-time 0.1 ;; 0.2
+                  jit-lock-stealth-time 1)))
+  (add-hook 'org-mode-hook #'locally-defer-font-lock)
+
+;;;; org-blank-before-new-entry : heading and plain-list
+
+  ;; 순서 없는 목록(unordered list)에서 bullet으로 들여쓰기를 할 때마다 +, -를 번갈아 사용한다
+  (setq org-list-demote-modify-bullet '(("+" . "-") ("-" . "+")))
+
+  (setq org-blank-before-new-entry
+        '((heading . t) (plain-list-item . nil)))
+
+  ;; /ohyecloudy-dot-doom/doom.d/config.org
+
+  ;; =M-RET= 키로 라인을 분리할 수 있게 한다. org module에서 nil 값을 바인딩한 걸 디폴트 값으로 돌림.
+  (setq org-M-RET-may-split-line '((default . t))) ; doom nil
+
+;;;; org-table
+
+  ;; /vedang-dotfiles-clj-agenda/org-mode-crate/org-mode-crate.el:942:
+  (setq org-table-export-default-format "orgtbl-to-csv")
+
+;;;; TODO org-columns
+
+  ;; vedang's style from org-mode-crate
+  (setq org-columns-default-format
+        "%50ITEM(Task) %5Effort(Effort){:} %5CLOCKSUM %3PRIORITY %20DEADLINE %20SCHEDULED %20TIMESTAMP %TODO %CATEGORY(Category) %TAGS")
+
+;;;; Disable org-element-cache
+
+  ;; 2024-06-27 안쓰는게 나은듯
+
+  ;; The new org-data element provides properties from top-level property drawer,
+  ;; buffer-global category, and :path property containing file path for file Org buffers.
+  (setq org-element-use-cache nil) ; default t
+
+  ;; Element cache persists across Emacs sessions
+  (setq org-element-cache-persistent nil) ; default t
+
+;;;; keybindings - org-mode-map
+
+  (progn
+    (define-key org-mode-map (kbd "<f3>") 'org-toggle-link-display)
+    (define-key org-mode-map (kbd "<f4>") 'org-toggle-inline-images)
+
+    (define-key org-mode-map (kbd "S-<tab>") (lambda () (interactive) (org-cycle 'FOLDED)))
+    (define-key org-mode-map (kbd "S-TAB") (lambda () (interactive) (org-cycle 'FOLDED)))
+    (define-key org-mode-map (kbd "<backtab>") (lambda () (interactive) (org-cycle 'FOLDED)))
+    (define-key org-mode-map (kbd "S-<iso-lefttab>") (lambda () (interactive) (org-cycle 'FOLDED)))
+    (define-key org-mode-map (kbd "C-M-<tab>") 'org-shifttab)
+
+    (define-key org-mode-map (kbd "C-c 1") 'org-show-level-1)
+    (define-key org-mode-map (kbd "C-c 2") 'org-show-level-2)
+    (define-key org-mode-map (kbd "C-c 3") 'org-show-level-3)
+    (define-key org-mode-map (kbd "C-c 4") 'org-show-level-4)
+
+    (define-key org-mode-map (kbd "C-c H") 'org-insert-heading)
+    (define-key org-mode-map (kbd "C-c S") 'org-insert-subheading)
+
+    (define-key org-mode-map (kbd "C-c r") #'my/org-random-heading)
+
+    (evil-define-key '(normal visual) org-mode-map (kbd "C-n") 'org-next-visible-heading)
+    (evil-define-key '(normal visual) org-mode-map (kbd "C-p") 'org-previous-visible-heading)
+
+    ;; evil-collection
+    (evil-define-key '(normal visual) org-mode-map (kbd "C-j") 'org-forward-heading-same-level)
+    (evil-define-key '(normal visual) org-mode-map (kbd "C-k") 'org-backward-heading-same-level)
+
+    (evil-define-key '(normal visual) org-mode-map (kbd "C-S-p") 'outline-up-heading)
+
+    (evil-define-key '(normal visual) org-mode-map "zu" 'outline-up-heading)
+
+    (evil-define-key '(insert) org-mode-map (kbd "C-n") 'next-line)
+    (evil-define-key '(insert) org-mode-map (kbd "C-p") 'previous-line)
+
+    ;; (evil-define-key '(insert) org-mode-map (kbd "M-h") 'delete-backward-char)
+    ;; (evil-define-key '(insert) org-mode-map (kbd "M-l") 'delete-forward-char)
+
+    ;; ordered/unordered list 를 입력 할 때 편함.
+    ;; 체크박스가 있는 경우 M-S-RET org-insert-todo-heading 을 활용.
+    ;; (evil-define-key '(normal insert visual) org-mode-map (kbd "C-M-<return>") 'org-insert-item)
+
+    ;; 문단을 한 라인으로 합쳐 준다. 구글 번역기 돌릴 때 매우 유용.
+    ;; (evil-define-key '(normal insert visual) org-mode-map (kbd "C-M-q") 'unfill-paragraph)
+
+    ;; 복사한 링크는 아래의 방법으로 넣는다. 깔끔해서 좋다.
+    ;; org-cliplink 는 insert 니까 i 를 바인딩한다. org-insert-link 를 따른다.
+    (evil-define-key '(normal insert visual) org-mode-map (kbd "C-c M-i") 'org-cliplink)
+    ;; (define-key map (kbd "C-c M-i") 'org-cliplink)
+
+    (evil-define-key '(insert) org-mode-map (kbd "C-u") 'undo-fu-only-undo)
+    (evil-define-key '(insert) org-mode-map (kbd "C-r") 'undo-fu-only-redo)
+
+    ;; flameshot 으로 스크린샷 한 뒤, 바로 붙여넣기
+    ;; 22/10/04--15:18 :: flameshot 저장하면 자동으로 클립보드에
+    ;; full-path 가 복사된다. imglink 스니펫을 부르고 경로를 복사한다.
+    ;; 스크린샷 및 이미지를 관리하기에 이러한 방법이 더 좋다.
+    ;; (evil-define-key '(normal insert visual) org-mode-map (kbd "C-c M-y") 'org-download-clipboard)
+    (define-key org-mode-map (kbd "C-c M-y") 'org-download-clipboard)
+
+    ;; ;; search to narrow with heading and tag
+    (define-key org-mode-map (kbd "C-c o") 'consult-org-heading) ;; GOOD
+
+    (define-key prog-mode-map (kbd "C-M-y") 'evil-yank)
+
+    (define-key org-mode-map (kbd "C-c y") 'org-cliplink)
+    (define-key org-mode-map (kbd "C-c I") 'org-insert-link-dwim) ; org-insert-link
+
+    ;; C-x x
+    (define-key ctl-x-x-map "h" #'prot-org-id-headline) ; C-x x h
+    (define-key ctl-x-x-map "H" #'prot-org-id-headlines)
+    ;; (define-key ctl-x-x-map "e" #'prot-org-ox-html)
+    (define-key org-mode-map (kbd "C-x x C") 'org-clone-subtree-with-time-shift)
+
+    ;; Shortcuts to Interactive Functions
+    (global-set-key (kbd "C-x n m") #'my/split-and-indirect-orgtree)
+    (global-set-key (kbd "C-x n M") #'my/kill-and-unsplit-orgtree)
+    )
+
+;;;; org-todo-keywords
+
+  (message "Press `C-c a' to get started with your agenda...")
+
+  ;; https://whhone.com/emacs-config/
+  (setq org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "PROG(p)" "|" "DONE(d)" "CANCELLED(c)")))
+
+  (with-no-warnings
+    (custom-declare-face '+org-todo-todo  '((t (:inherit (bold error org-todo)))) "")
+    (custom-declare-face '+org-todo-next  '((t (:inherit (bold warning org-todo)))) "")
+    (custom-declare-face '+org-todo-done  '((t (:inherit (bold success org-todo)))) "")
+    (custom-declare-face '+org-todo-prog  '((t (:inherit (bold font-lock-constant-face org-todo)))) "")
+    (custom-declare-face '+org-todo-cancelled '((t (:inherit (bold font-lock-doc-face org-todo)))) "")
+    )
+
+  (setq org-todo-keyword-faces
+        '(("TODO" . +org-todo-todo) ;; red
+          ("DONE" . +org-todo-done) ;; green
+          ("NEXT" . +org-todo-next) ;; yellow
+          ("PROG" . +org-todo-prog) ; blue
+          ("CANCELLED" . +org-todo-cancelled) ;; green
+          ))
+
+  ;; https://orgmode.org/worg/org-tutorials/org-custom-agenda-commands.html
+  (setq org-agenda-custom-commands
+        '(("n" "Agenda / PROG / NEXT"
+           ((agenda "" nil)
+            (tags "INBOX+LEVEL=2|CATEGORY=\"Inbox\"+LEVEL=1")
+            (todo "PROG" nil)
+            (todo "NEXT" nil)
+            ;; (todo "TODO" nil) ;; 2024-03-18 add
+            ) nil)
+          (" " "Agenda and all TODOs" ; default' view
+           ((agenda "")
+            (alltodo "")))))
+
+;;;; org-contacts/agenda files
+
+  (if (locate-library "org-contacts")
+      (require 'org-contacts))
+
+  (setq org-contacts-files (list (my/org-contacts-file)))
+
+  ;; My agenda files. keep it simple
+  (setq org-user-agenda-files (list
+                               (my/org-inbox-file)
+                               (my/org-tasks-file)
+                               (my/org-diary-file)
+                               (my/org-life-file)
+
+                               ;; (my/org-contacts-file)
+                               ;; (my/org-drill-file)
+                               ;; (my/org-quote-file)
+                               ;; (my/org-mobile-file)
+                               ;; (my/org-links-file)
+
+                               ;; (my/org-kdc-file)
+                               ;; (my/org-tags-file)
+                               ;; (my/org-glossary-file)
+
+                               ;; (my/org-blog-file)
+                               ;; (my/org-reading-file)
+
+                               ;; (my/org-remember-file)
+                               ;; ;; (my/org-remark-file)
+                               ))
+  (setq org-agenda-files org-user-agenda-files)
+
+  (setq org-agenda-diary-file (my/org-diary-file))
+  (setq org-default-notes-file (my/org-inbox-file))
+
+  ;; doom-emacs capture files : absolute path
+  (setq +org-capture-todo-file (my/org-inbox-file))
+  (setq +org-capture-projects-file (my/org-tasks-file))
+  (setq +org-capture-notes-file (my/org-inbox-file))
+  (setq +org-capture-changelog-file (my/org-inbox-file))
+  (setq +org-capture-journal-file (my/org-diary-file))
+
+;;;; org-agenda
+
+  ;; Use sticky agenda since I need different agenda views (personal and work) at the same time.
+  (setq org-agenda-sticky t) ; default nil
+
+  ;; Shift the agenda to show the previous 3 days and the next 7 days for
+  ;; better context on your week. The past is less important than the future.
+  (setq org-agenda-span 'day) ; default 'week, doom 10
+
+  ;; Hide all scheduled todo.
+  (setq org-agenda-todo-ignore-scheduled 'all)
+
+  ;; Ignores "far" deadline TODO items from TODO list.
+  (setq org-agenda-todo-ignore-deadlines 'far)
+
+  ;; Hide all scheduled todo, from tags search view, like tags-todo.
+  (setq org-agenda-tags-todo-honor-ignore-options t)
+
+  ;; Hide all done todo in agenda
+  (setq org-agenda-skip-scheduled-if-done t)
+
+  ;; Hide task until the scheduled date.
+  (setq org-agenda-skip-deadline-prewarning-if-scheduled 'pre-scheduled)
+
+  (setq org-log-into-drawer t)
+
+  (setq org-log-done 'time)
+
+  ;; (setcdr (assoc 'note org-log-note-headings) "%d")
+  ;; Interstitial Journaling: add note to CLOCK entry after clocking out
+  ;; https://emacs.stackexchange.com/questions/37526/add-note-to-clock-entry-after-clocking-out
+  (setq org-log-note-clock-out t)
+
+  ;; 4 priorities to model Eisenhower's matrix.
+  ;; - [#A] means +important +urgent
+  ;; - [#B] means +important -urgent
+  ;; - [#C] means -important +urgent
+  ;; - [#D] means -important -urgent
+  (setq org-priority-default 68
+        org-priority-lowest 68)
+
+;;;; diary-file
+
+  (setq diary-file (concat user-dotemacs-dir "diary"))
+  (setq org-agenda-include-diary t)
+
+;;;; org-agenda-log-mode and clock-mode
+
+  ;; Show all agenda dates - even if they are empty
+  (setq org-agenda-show-all-dates t)
+  (setq org-agenda-start-with-log-mode t)
+
+  ;; Agenda log mode items to display (closed clock : default)
+  ;; 이전 이맥스는 state 가 기본이었다. 지금은 시간 기준으로 표기한다.
+  ;; closed    Show entries that have been closed on that day.
+  ;; clock     Show entries that have received clocked time on that day.
+  ;; state     Show all logged state changes.
+  ;; (setq org-agenda-log-mode-items '(closed clock state))
+  (setq org-agenda-log-mode-add-notes nil)
+
+  ;; sort 관련 기능을 확인해보고 정의한 함수들이 필요 없으면 빼면 된다.
+  (setq org-agenda-sort-notime-is-late t) ; Org 9.4
+  (setq org-agenda-sort-noeffort-is-high t) ; Org 9.4
+
+  ;; Time Clocking
+  (setq org-clock-idle-time 30) ; 10
+  (setq org-clock-reminder-timer (run-with-timer
+                                  t (* org-clock-idle-time 20) ; 60
+                                  (lambda ()
+                                    (unless (org-clocking-p)
+                                      (alert "Do you forget to clock-in?"
+                                             :title "Org Clock")))))
+  ;; (org-clock-auto-clockout-insinuate) ; auto-clockout
+  ;; modeline 에 보이는 org clock 정보가 너무 길어서 줄임
+  (setq org-clock-string-limit 30) ; default 0
+
+  ;; org-clock-persist for share with machines
+  (setq org-clock-persist-query-save t)
+  (setq org-clock-persist-query-resume t)
+
+  ;; current  Only the time in the current instance of the clock
+  ;; today    All time clocked into this task today
+  ;; repeat   All time clocked into this task since last repeat
+  ;; all      All time ever recorded for this task
+  ;; auto     Automatically, either all, or repeat for repeating tasks
+  (setq org-clock-mode-line-entry t)
+  (setq org-clock-mode-line-line-total 'auto) ; default nil
+
+  ;; global Effort estimate values
+  ;; global STYLE property values for completion
+  (setq org-global-properties
+        (quote
+         (("Effort_ALL" . "0:15 0:30 0:45 1:00 2:00 3:00 4:00 5:00 6:00 8:00")
+          ("STYLE_ALL" . "habit"))))
+
+  ;; Include the file name into the path in refile target.
+  ;; (setq org-refile-use-outline-path 'file) ; default nil
+  ;; (setq org-outline-path-complete-in-steps nil) ; default t
+
+  ;; (setq org-refile-targets
+  ;;       `((nil :maxlevel . 2)
+  ;;         (,(my/org-tasks-file) :maxlevel . 2)
+  ;;         (,(my/org-links-file) :maxlevel . 2)))
+
+  ;; Save Org buffers after refiling!
+  ;; (advice-add 'org-refile :after 'org-save-all-org-buffers)
+
+;;;; consult-org-agenda
+
+  ;; (defun my/consult-org-agenda ()
+  ;;   (interactive)
+  ;;   (consult-org-agenda)
+  ;;   (org-tree-to-indirect-buffer))
+
+  (setq my/consult-org-files '())
+  (add-to-list 'my/consult-org-files (my/org-inbox-file) t)
+  (add-to-list 'my/consult-org-files (my/org-tasks-file) t)
+  (add-to-list 'my/consult-org-files (my/org-links-file) t)
+  (add-to-list 'my/consult-org-files (my/org-contacts-file) t)
+  (add-to-list 'my/consult-org-files (my/org-mobile-file) t)
+  ;; (add-to-list 'my/consult-org-files (my/org-diary-file) t)
+
+  (when (file-exists-p (my/org-blog-file))
+    (add-to-list 'my/consult-org-files (my/org-blog-file) t))
+
+  (when (file-exists-p (my/org-reading-file))
+    (add-to-list 'my/consult-org-files (my/org-reading-file) t))
+
+  ;; (when (file-exists-p (my/org-emacs-config-file))
+  ;;     (add-to-list 'my/consult-org-files (my/org-emacs-config-file) t))
+
+  (defun my/consult-org-all ()
+    (interactive)
+    (consult-org-heading
+     "+LEVEL<=2" ; 3
+     my/consult-org-files))
+
+  (defun my/consult-org-contacts ()
+    (interactive)
+    (consult-org-heading
+     "+LEVEL<=3"
+     (list (my/org-contacts-file))))
+
+  (defun my/consult-org-inbox ()
+    (interactive)
+    (consult-org-heading
+     "+LEVEL<=3"
+     (list (my/org-inbox-file))))
+
+  (defun my/consult-org-tasks ()
+    (interactive)
+    (consult-org-heading
+     "+LEVEL<=3"
+     (list (my/org-tasks-file))))
+
+  (defun my/consult-org-links ()
+    (interactive)
+    (consult-org-heading
+     "+LEVEL<=3"
+     (list (my/org-links-file))))
+
+  (defun my/consult-org-quote ()
+    (interactive)
+    (consult-org-heading
+     "+LEVEL<=3"
+     (list (my/org-quote-file))))
+
+  (defun my/consult-org-kdc ()
+    (interactive)
+    (consult-org-heading
+     "+LEVEL<=3"
+     (list (my/org-kdc-file))))
+
+  (defun my/consult-org-blog ()
+    (interactive)
+    (consult-org-heading
+     "+LEVEL<=3"
+     (list (my/org-blog-file))))
+
+  (defun my/consult-org-reading ()
+    (interactive)
+    (consult-org-heading
+     "+LEVEL<=3"
+     (list (my/org-reading-file))))
+
+;;;; org-tag and category
+
+  ;; (setq org-auto-align-tags nil) ; default t, use doom's custom
+  ;; (setq org-tags-column 0) ; default -77
+  (setq org-agenda-tags-column -80) ;; 'auto ; org-tags-column
+  (setq org-agenda-show-inherited-tags nil)
+
+  (setq org-tag-alist (quote (
+                              (:startgroup) ;; Location
+                              ("@Errand" . ?E)
+                              ("@Office" . ?O)
+                              ("@Library" . ?L)
+                              ("@Cafe" . ?C)
+                              ("@Home" . ?H)
+                              (:endgroup)
+                              (:startgroup) ;; Action
+                              ("@Read" . ?R)
+                              ("@Write" . ?W)
+                              (:endgroup)
+                              (:startgroup) ;; Category
+                              ("@Personal" . ?P)
+                              ("@Family" . ?F)
+                              (:endgroup) ;; Status
+                              ("WAITING" . ?w)
+                              ("IMPORTANT" . ?i)
+                              ("NEXT" . ?n)
+                              ("HOLD" . ?h)
+                              ("CANCELLED" . ?c)
+                              ("crypt" . ?E)
+                              ("NOTE" . ?n)
+                              ("noexport" . ?x)
+                              ("nonum" . ?u)
+                              ("LATEST" . ?l) ;; latest version
+                              ("FLAGGED" . ??))))
+
+  (add-to-list 'org-tags-exclude-from-inheritance "projects")
+
+;;;; org-journal/agenda
+
+  ;; (add-hook 'org-agenda-mode-hook
+  ;;           (lambda ()
+  ;;             (calendar-set-date-style 'iso)))
+
+  (defun org-journal-new-entry ()
+    "Inserts header with inactive timestamp, hours and minutes.
+     A custom journal helper function."
+    (interactive)
+    (org-insert-heading)
+    (org-insert-time-stamp (current-time) t t))
+
+  ;; Clock break time in pomodoro
+  (setq org-pomodoro-clock-break t)
+
+  ;; Get a timestamp for tomorrow
+  (defun my/tomorrow ()
+    (format-time-string "%Y-%m-%d" (time-add 86400 (current-time))))
+
+;;;; src-lang-modes
+
+  ;; (add-to-list 'org-src-lang-modes (quote ("dot" . graphviz-dot)))
+
+;;;; edit-src-code
+
+  ;; Disable editing source code in dedicated buffer
+  ;; https://emacs.stackexchange.com/questions/73986/how-do-i-stop-org-babel-from-trying-to-edit-a-source-block-in-a-dedicated-buffer/73988#73988
+  ;; (defun org-edit-src-code nil)
+
+;;;; link-abbrev
+
+  ;; 추가
+  (add-to-list 'org-link-abbrev-alist
+               '("wikidata"        . "https://www.wikidata.org/wiki/"))
+
+;;;; procratinate
+
+  (defun org-procrastinate ()
+    "Set the scheduled date on an Org agenda item to tomorrow."
+    (interactive)
+    (org-agenda-schedule nil "+1d"))
+
+;;;; org-agenda-custom-commands
+
+  ;; ol-doi ol-w3m ol-bbdb ol-docview ol-gnus ol-info ol-irc ol-mhe ol-rmail
+  ;; ol-eww ol-bibtex
+  ;; Adapted from http://stackoverflow.com/a/12751732/584121
+  ;; (require 'org-protocol)
+  (setq org-protocol-default-template-key "L")
+  (setq org-modules `(
+                      org-habit
+                      org-protocol
+                      ))
+
+  ;; (setq org-agenda-prefix-format
+  ;;       '((agenda  . " %i %-14:c%?-12t% s")
+  ;;         (todo  . " %i %-14:c")
+  ;;         (tags  . " %i %-14:c")
+  ;;         (search . " %i %-14:c")))
+
+  ;; https://www.pygopar.com/creating-new-columns-in-org-agenda
+  ;; Originally from here: https://stackoverflow.com/a/59001859/2178312
+  (defun gopar/get-schedule-or-deadline-if-available ()
+    (let ((scheduled (org-get-scheduled-time (point)))
+          (deadline (org-get-deadline-time (point))))
+      (if (not (or scheduled deadline))
+          (format " ")
+        ;; (format "🗓️ ")
+        "   ")))
+
+  (setq org-agenda-prefix-format
+        '((agenda . " %-4e %i %-12:c%?-12t% s ")
+          (todo . " %i %-10:c %-5e %(gopar/get-schedule-or-deadline-if-available)")
+          (tags . " %i %-12:c")
+          (search . " %i %-12:c")))
+
+  (when IS-TERMUX
+    (setq org-agenda-prefix-format
+          '((agenda  . " %i %?-12t% s")
+            (todo  . " %i ")
+            (tags  . " %i ")
+            (search . " %i "))))
+
+  (setq org-agenda-category-icon-alist nil)
+
+  (setq org-agenda-hide-tags-regexp
+        "agenda\\|CANCELLED\\|LOG\\|ATTACH\\|GENERAL\\|BIRTHDAY\\|PERSONAL\\|PROFESSIONAL\\|TRAVEL\\|PEOPLE\\|HOME\\|FINANCE\\|PURCHASES")
+
+  (add-hook 'org-agenda-finalize-hook
+            (lambda ()
+              ;; (setq-local line-spacing 0.2)
+              (define-key org-agenda-mode-map
+                          [(double-mouse-1)] 'org-agenda-goto-mouse)))
+
+  (defun cc/org-agenda-goto-now ()
+    "Redo agenda view and move point to current time '← now'"
+    (interactive)
+    (org-agenda-redo)
+    (org-agenda-goto-today)
+
+    (if window-system
+        (search-forward "← now ─")
+      (search-forward "now -"))
+    )
+
+  (add-hook 'org-agenda-mode-hook
+            (lambda ()
+              (define-key org-agenda-mode-map (kbd "<f2>") 'org-save-all-org-buffers)
+              (define-key org-agenda-mode-map (kbd "M-p") 'org-pomodoro)
+              (define-key org-agenda-mode-map (kbd "M-P") 'ash/org-pomodoro-til-meeting)
+              (define-key org-agenda-mode-map (kbd "M-.") 'cc/org-agenda-goto-now)))
+
+  (add-hook 'evil-org-agenda-mode-hook
+            (lambda ()
+              ;; (evil-define-key 'motion evil-org-agenda-mode-map "gt" 'centaur-tabs-forward) ; default doom's bindings
+              ;; (evil-define-key 'motion evil-org-agenda-mode-map "gT" 'centaur-tabs-backward)
+              (evil-define-key 'motion evil-org-agenda-mode-map "gt" 'tab-line-switch-to-next-tab) ; default doom's bindings
+              (evil-define-key 'motion evil-org-agenda-mode-map "gT" 'tab-line-switch-to-prev-tab)
+              (evil-define-key 'motion evil-org-agenda-mode-map "F" 'org-agenda-follow-mode)))
+
+  ;; (setq org-archive-location "archives/%s_archive::")
+  (setq org-archive-location (file-name-concat org-directory "archives/%s::"))
+
+  ;; nil 이면 C-c C-o 으로 접근한다.
+  ;; (setq org-mouse-1-follows-link t) ; default 450
+
+;;;; Default Capture Templates (from Doom-Emacs)
+
+  (setq org-capture-template-dir (concat user-dotemacs-dir "captures/"))
+  (setq org-datetree-add-timestamp t)
+
+  (setq org-capture-templates
+        '(
+          ;; ("t" "todo" entry (file+headline +org-capture-todo-file "Inbox")
+          ;;  "* [ ] %?\n%i\n%a")
+
+          ;; ("d" "deadline" entry (file+headline +org-capture-todo-file "Inbox")
+          ;;  "* [ ] %?\nDEADLINE: <%(org-read-date)>\n\n%i\n%a")
+
+          ;; ("s" "schedule" entry (file+headline +org-capture-todo-file "Inbox")
+          ;;  "* [ ] %?\nSCHEDULED: <%(org-read-date)>\n\n%i\n%a")
+
+          ;; ("T" "Todo ⏰" entry (file +org-capture-todo-file)
+          ;;  "* TODO [#C] %?\n%T\n%a\n" :clock-in t :clock-resume t)
+
+          ;; ("n" "Notes" entry (file+headline +org-capture-notes-file "Notes")
+          ;;  "* %u %?\n%i\n%a")
+
+          ("j" "Journal" entry (file+olp+datetree +org-capture-journal-file)
+           "* %<%H:%M> - %?\n%T\n%a\n")
+          ;; "* %U %?\n%i\n%a" :prepend t)
+          ("J" "Journal ⏰" entry (file+olp+datetree +org-capture-journal-file)
+           "* %<%H:%M> - %?\n%U\n%a\n" :clock-in t :clock-resume t) ; :tree-type week
+
+          ;; import DOOM Emacs Templates
+          ;; Will use {project-root}/{todo,notes,changelog}.org, unless a
+          ;; {todo,notes,changelog}.org file is found in a parent directory.
+          ;; Uses the basename from `+org-capture-todo-file',
+          ;; `+org-capture-changelog-file' and `+org-capture-notes-file'.
+          ;; ("p" "Templates for projects")
+          ;; ("pt" "Project-local todo" entry  ; {project-root}/todo.org
+          ;;  (file+headline +org-capture-project-todo-file "Inbox")
+          ;;  "* TODO %?\n%i\n%a" :prepend t)
+          ;; ("pn" "Project-local notes" entry  ; {project-root}/notes.org
+          ;;  (file+headline +org-capture-project-notes-file "Inbox")
+          ;;  "* %U %?\n%i\n%a" :prepend t)
+          ;; ("pc" "Project-local changelog" entry  ; {project-root}/changelog.org
+          ;;  (file+headline +org-capture-project-changelog-file "Unreleased")
+          ;;  "* %U %?\n%i\n%a" :prepend t)
+
+          ;; Will use {org-directory}/{+org-capture-projects-file} and store
+          ;; these under {ProjectName}/{Tasks,Notes,Changelog} headings. They
+          ;; support `:parents' to specify what headings to put them under, e.g.
+          ;; :parents ("Projects")
+          ;; ("o" "Centralized templates for projects")
+          ;; ("ot" "Project Todo" entry
+          ;;  (function +org-capture-central-project-todo-file)
+          ;;  "* TODO %?\n %i\n %a"
+          ;;  :heading "Tasks"
+          ;;  :prepend nil)
+          ;; ("on" "Project Notes" entry
+          ;;  (function +org-capture-central-project-notes-file)
+          ;;  "* %U %?\n %i\n %a"
+          ;;  :heading "Notes"
+          ;;  :prepend t)
+          ;; ("oc" "Project Changelog" entry
+          ;;  (function +org-capture-central-project-changelog-file)
+          ;;  "* %U %?\n %i\n %a"
+          ;;  :heading "Changelog"
+          ;;  :prepend t)
+          )
+        )
+
+  ;; See https://orgmode.org/manual/Template-elements.html#index-org_002ddefault_002dnotes_002dfile-1
+  ;; (setq org-capture-templates nil)
+  (add-to-list
+   'org-capture-templates
+   `("i" "Inbox" entry (file+headline ,(my/org-inbox-file) "Inbox")
+     "* %?\n%i\n%a"))
+
+  (add-to-list
+   'org-capture-templates
+   `("I" "Inbox (Work)" entry (file+headline ,(my/org-inbox-file) "Inbox")
+     "* %? :work:\n%i\n%a"))
+
+  (add-to-list
+   'org-capture-templates
+   `("p" "Project /w template" entry (file+headline ,(my/org-tasks-file) "Projects")
+     (file ,(concat org-capture-template-dir "project.capture"))))
+
+  (add-to-list
+   'org-capture-templates
+   `("v" "Vocab" entry (file+headline ,(my/org-drill-file) "Translation")
+     "* %? :drill:\n\n** Translation\n\n** Definition\n"))
+
+  (unless IS-TERMUX
+    (add-to-list
+     'org-capture-templates
+     `("c" "Contacts" entry (file ,(my/org-contacts-file))
+       "* %(org-contacts-template-name)\n:PROPERTIES:\n:ID: %(org-id-uuid)\n:GITHUB:\n:EMAIL: a@a.com\n:URL:\n:NOTE:\n:END:\n%U\n%T\n%a\n"))
+
+    (add-to-list
+     'org-capture-templates
+     `("l" "links" entry (file ,(my/org-links-file))
+       "* TODO %(org-cliplink-capture)" :immediate-finish t))
+    )
+
+  ;; (add-to-list
+  ;;  'org-capture-templates
+  ;;  `("T" "Personal Todo /w clock-in" entry (file ,(my/org-inbox-file))
+  ;;    "* TODO [#C] %?\n%T\n%a\n" :clock-in t :clock-resume t))
+
+  ;; (push `("j" "journal entry" entry (file+olp+datetree ,(my/org-diary-file))
+  ;;         "* %<%H:%M> - %?\n%T\n")
+  ;;       org-capture-templates)
+  ;; (push `("J" "Journal /w clock-in" entry (file+olp+datetree ,(my/org-diary-file))
+  ;;         "* %<%H:%M> - %?\n%U\n%a\n" :clock-in t :clock-resume t :empty-lines 1)
+  ;;       org-capture-templates)
+
+;;;; org-id-location
+
+  (setq org-id-locations-file (file-name-concat org-directory (concat "." system-name "-orgids"))) ;; share
+
+;;;; org-insert-heading-respect-content
+
+  ;; overide here! important
+  (setq org-insert-heading-respect-content nil) ; doom t
+
+;;;; org-link-set-parameters
+
+  (progn
+    ;; 2024-06-04 file - id - http/https
+    (org-link-set-parameters "file" :face `(:inherit link :weight bold :slant italic :underline t)) ;; italic
+    (org-link-set-parameters "id" :face `(:inherit success :weight bold :underline t))
+    (org-link-set-parameters "http" :face `(:inherit warning :weight semibold :underline t))
+    (org-link-set-parameters "info" :face `(:inherit info-file :weight semibold :underline t))
+    (org-link-set-parameters "https" :face `(:inherit warning :weight semibold :underline t))
+    )
+;;;; org-cliplink
+
+  (with-eval-after-load 'org-cliplink
+    (require 'org-cliplink)
+    (setq org-cliplink-max-length 72)
+    (setq org-cliplink-ellipsis "-")
+
+    ;; from ohyecloudy
+    (defun my/org-cliplink ()
+      (interactive)
+      (org-cliplink-insert-transformed-title
+       (org-cliplink-clipboard-content)     ;take the URL from the CLIPBOARD
+       #'my-org-link-transformer))
+
+    (defun my-org-link-transformer (url title)
+      (let* ((parsed-url (url-generic-parse-url url)) ;parse the url
+             (host-url (replace-regexp-in-string "^www\\." "" (url-host parsed-url)))
+             (clean-title
+              (cond
+               ;; if the host is github.com, cleanup the title
+               ((string= (url-host parsed-url) "github.com")
+                (replace-regexp-in-string "^/" ""
+                                          (car (url-path-and-query parsed-url))))
+               ;; otherwise keep the original title
+               (t (my-org-cliplink--cleansing-site-title title))))
+             (title-with-url (format "%s - %s" clean-title host-url)))
+        ;; forward the title to the default org-cliplink transformer
+        (org-cliplink-org-mode-link-transformer url title-with-url)))
+
+    (defun my-org-cliplink--cleansing-site-title (title)
+      (let ((result title)
+            (target-site-titles '(" - 위키백과"
+                                  " - Wikipedia"
+                                  " - PUBLY"
+                                  " - YES24"
+                                  "알라딘: "
+                                  " : 클리앙"
+                                  " - YouTube")))
+        (dolist (elem target-site-titles)
+          (if (string-match elem result)
+              (setq result (string-replace elem "" result))
+            result))
+        result))
+
+    ;; 마지막에 host 를 붙이고 싶어서 link transformer 함수를 짰다. =title -
+    ;; ohyecloudy.com= 식으로 org link 를 만든다.
+    (define-key org-mode-map [remap org-cliplink] 'my/org-cliplink)
+    )
+
+;;;; org-elfeed
+
+  (with-eval-after-load 'elfeed
+    (setq rmh-elfeed-org-files (concat user-org-directory "elfeed.org"))
+    (setq elfeed-search-filter "@6-months-ago") ;;  "@1-month-ago +unread"
+    (setq elfeed-search-title-max-width 80) ; default 70
+    (add-hook 'elfeed-search-mode-hook #'elfeed-update)
+    )
+;;;; END
+  )
+
 ;;; Keybindings
 
 ;;;; For Mode
@@ -1813,97 +3064,6 @@
 (+my/open-workspaces)
 
 ;;; UI
-
-;;;; modus-themes
-
-(use-package modus-themes
-  :config
-  (setq modus-themes-italic-constructs t
-        modus-themes-bold-constructs t
-        modus-themes-custom-auto-reload t
-
-        ;; Options for `modus-themes-prompts' are either nil (the
-        ;; default), or a list of properties that may include any of those
-        ;; symbols: `italic', `WEIGHT'
-        ;; modus-themes-prompts '(bold)
-
-        ;; The `modus-themes-completions' is an alist that reads two
-        ;; keys: `matches', `selection'.  Each accepts a nil value (or
-        ;; empty list) or a list of properties that can include any of
-        ;; the following (for WEIGHT read further below):
-        ;; `matches'   :: `underline', `italic', `WEIGHT'
-        ;; `selection' :: `underline', `italic', `WEIGHT'
-        ;; modus-themes-completions
-        ;; '((matches   . (semibold))
-        ;;   (selection . (semibold text-also)))
-
-        modus-themes-common-palette-overrides
-        `((fg-mode-line-active fg-main) ; Black
-
-          ;; Comments are yellow, strings are green
-          (comment yellow-cooler)
-          (string green-warmer)
-
-          ;; "Make the mode line borderless"
-          (border-mode-line-active unspecified)
-          (border-mode-line-inactive unspecified)
-
-          ;; "Make matching parenthesis more or less intense"
-          (bg-paren-match bg-magenta-intense)
-          (underline-paren-match unspecified)
-
-          ;; Intense magenta background combined with the main foreground
-          ;; (bg-region bg-magenta-subtle)
-          ;; (fg-region fg-main)
-
-          ;; Links
-          ;; (underline-link border)
-          ;; (underline-link-visited border)
-          ;; (underline-link-symbolic border)
-
-          (bg-heading-0 bg-green-subtle) ; green
-          (bg-heading-1 bg-dim)
-          (bg-heading-2 bg-yellow-subtle)
-          (bg-heading-3 bg-blue-nuanced) ; blue
-
-          ;; copy from intense
-          (overline-heading-0 unspecified)
-          (overline-heading-1 magenta-cooler)
-          (overline-heading-2 magenta-warmer)
-
-          ;; And expand the preset here. Note that the ,@ works because we use
-          ;; the backtick for this list, instead of a straight quote.
-          ;; ,@modus-themes-preset-overrides-faint
-          ;; ,@modus-themes-preset-overrides-intense
-          ))
-
-  (defun my/modus-themes-custom-faces ()
-    (interactive)
-    ;; (message "modus-themes-after-hook : my-modus-themes-custom-faces")
-    (modus-themes-with-colors
-      (custom-set-faces
-       ;; `(tab-bar ((,c :background ,bg-tab-bar)))
-       ;; `(tab-bar-tab-group-current ((,c :inherit bold :background ,bg-tab-current :box (:line-width -2 :color ,bg-tab-current) :foreground ,fg-alt)))
-       ;; `(tab-bar-tab-group-inactive ((,c :background ,bg-tab-bar :box (:line-width -2 :color ,bg-tab-bar) :foreground ,fg-alt)))
-       ;; `(tab-bar-tab ((,c :inherit bold :box (:line-width -2 :color ,bg-tab-current) :background ,bg-tab-current)))
-       ;; `(tab-bar-tab-inactive ((,c :box (:line-width -2 :color ,bg-tab-other) :background ,bg-tab-other)))
-       ;; `(tab-bar-tab-ungrouped ((,c :inherit tab-bar-tab-inactive)))
-       ;; `(fringe ((,c :background ,bg-dim)))
-
-       `(vterm-color-black ((,c :background "gray25" :foreground "gray25")))
-       `(vterm-color-yellow ((,c :background ,yellow-intense :foreground ,yellow-intense)))
-       `(org-mode-line-clock ((,c :inherit bold :foreground ,modeline-info)))
-       `(org-mode-line-clock-overrun ((,c :inherit bold :foreground ,modeline-err)))
-       `(jinx-misspelled ((,c :underline (:style wave :color ,magenta-cooler))))
-       ;; `(keycast-command ((,c :inherit default :height 0.9)))
-       ))
-    (when (display-graphic-p) ; gui
-      (when (locate-library "spacious-padding")
-        (spacious-padding-mode +1)))
-    )
-  (add-hook 'modus-themes-post-load-hook #'my/modus-themes-custom-faces)
-
-  (load-theme 'modus-operandi :no-confirm))
 
 ;;;; disable scroll-bar-mode
 
@@ -1998,4 +3158,8 @@
             (t (backward-char 0))))))
 
 
+;;; Load theme
+
+(load-theme 'modus-operandi :no-confirm)
+;; (modus-themes-toggle)
 ;;; init.el ends here

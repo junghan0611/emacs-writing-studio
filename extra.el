@@ -19,9 +19,6 @@
 ;;
 ;;; Code:
 
-;;; archives
-
-
 ;;; TODO diff-hl
 
 (use-package diff-hl
