@@ -55,15 +55,72 @@
     )
   )
 
+;;; consult
+
+(use-package consult
+  :bind (;; C-c bindings (mode-specific-map)
+         ("C-c h" . consult-history)
+         ("C-c m" . consult-mode-command)
+         ("C-c b" . consult-bookmark)
+         ("C-c k" . consult-kmacro)
+         ;; C-x bindings (ctl-x-map)
+         ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+         ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+         ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+         ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+         ;; Custom M-# bindings for fast register access
+         ("M-#" . consult-register-load)
+         ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+         ("C-M-#" . consult-register)
+         ;; Other custom bindings
+         ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+         ;; M-g bindings (goto-map)
+         ("M-g e" . consult-compile-error)
+         ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+         ("M-g g" . consult-goto-line)             ;; orig. goto-line
+         ;; ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+         ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+         ("M-g m" . consult-mark)
+         ("M-g k" . consult-global-mark)
+         ("M-g i" . consult-imenu)
+         ("M-g I" . consult-imenu-multi)
+         ;; M-s bindings (search-map)
+         ("M-s b" . consult-buffer)
+         ("M-s f" . consult-find)
+         ("M-s F" . consult-fd)
+         ("M-s L" . consult-locate)
+         ("M-s g" . consult-grep)
+         ("M-s G" . consult-git-grep)
+         ("M-s r" . consult-ripgrep)
+         ("M-s l" . consult-line)
+         ("M-s m" . consult-line-multi)
+         ("M-s k" . consult-keep-lines)
+         ("M-s u" . consult-focus-lines)
+         ;; Isearch integration
+         ("M-s e" . consult-isearch-history)
+         :map isearch-mode-map
+         ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+         ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+         ("M-s l" . consult-line))                 ;; needed by consult-line to detect isearch
+  )
+
 ;;; vertico
 
 (with-eval-after-load 'vertico
   ;; 2023-12-02
   (define-key vertico-map (kbd"C-<return>") 'vertico-quick-exit)
-  ;; vertico-directory
+
   (define-key vertico-map (kbd "RET")   'vertico-directory-enter)
   (define-key vertico-map (kbd "DEL")   'vertico-directory-delete-char)
   (define-key vertico-map (kbd "M-DEL") 'vertico-directory-delete-word)
+
+  (define-key vertico-map (kbd "C-S-j") #'vertico-scroll-down)
+  (define-key vertico-map (kbd "C-S-k") #'vertico-scroll-up)
+
+  (define-key vertico-map (kbd "C-j") #'vertico-next)
+  (define-key vertico-map (kbd "C-k") #'vertico-previous)
+  (define-key vertico-map (kbd "C-M-j") #'vertico-next-group)
+  (define-key vertico-map (kbd "C-M-k") #'vertico-previous-group)
 
   ;; 2023-05-23 org-roam-node-find
   (define-key vertico-map (kbd "C-n") #'spacemacs/next-candidate-preview)

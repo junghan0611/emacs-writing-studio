@@ -116,7 +116,17 @@
   :if window-system
   :custom
   (line-spacing 3)
+  :hook (server-after-make-frame . spacious-padding-mode)
   :init
+  (setq spacious-padding-widths
+        '(:internal-border-width 15 ; 15
+                                 :header-line-width 4
+                                 :mode-line-width 4 ; 6
+                                 :tab-width 4
+                                 :right-divider-width 15 ; 30
+                                 :scroll-bar-width 8
+                                 :fringe-width 10)) ; 8
+  :config
   (spacious-padding-mode 1))
 
 ;; Modus Themes
@@ -128,8 +138,8 @@
   ;; (modus-themes-mixed-fonts t)
   (modus-themes-to-toggle
    '(modus-operandi modus-vivendi-tinted))
-  :init
-  (load-theme 'modus-operandi :no-confirm)
+  ;; :init
+  ;; (load-theme 'modus-operandi :no-confirm)
   :bind
   (("C-c w t t" . modus-themes-toggle)
    ("C-c w t m" . modus-themes-select)
@@ -791,9 +801,6 @@
 ;; Shr group: Simple HTML Renderer 를 의미한다. 여기 설정을 바꾸면 faces 를 수정할 수 있음
 (setq shr-use-fonts nil)
 
-;; buffer size 를 표기 합니다.
-(setq size-indication-mode t)
-
 ;; http://yummymelon.com/devnull/surprise-and-emacs-defaults.html
 ;;텍스트를 선택한 다음 그 위에 입력하면 해당 텍스트가 삭제되어야 합니다.
 ;;놀랍게도 기본 Emac 에서는 이 동작이 기본적으로 제공되지 않습니다. 명시적으로
@@ -827,7 +834,6 @@
 
 ;;;; display-Line-Numbers-Mode
 
-(column-number-mode)
 (setq display-line-numbers-type 'relative)
 
 ;; (dolist (mode '(term-mode-hook
@@ -1241,15 +1247,35 @@
 
 (use-package pcre2el)
 
+;;;; which-key
+
+(require 'which-key)
+(setq which-key-popup-type 'minibuffer)
+(setq which-key-idle-delay 0.4
+      which-key-idle-secondary-delay 0.01
+      which-key-allow-evil-operators t)
+(setq which-key-sort-order #'which-key-key-order-alpha
+      which-key-sort-uppercase-first nil
+      which-key-add-column-padding 1
+      which-key-max-display-columns nil
+      which-key-min-display-lines 6
+      which-key-side-window-slot -10)
+
+;; (setq-default line-spacing 3) ; use fontaine
+
 ;;;; doom-modeline
 
+;; (size-indication-mode t)
+;; (column-number-mode t)
+
 (use-package doom-modeline
+  :hook (doom-modeline-mode . size-indication-mode) ; filesize in modeline
+  :hook (doom-modeline-mode . column-number-mode)   ; cursor column in modeline
   :init
   (setq doom-modeline-time nil)
   (setq doom-modeline-time-icon nil)
   (setq doom-modeline-minor-modes nil)
-  ;; (setq doom-modeline-battery nil)
-  ;; (setq Info-breadcrumbs-in-mode-line-mode nil)
+  (setq doom-modeline-battery nil)
   (setq doom-modeline-support-imenu t)
 
   (setq doom-modeline-enable-word-count nil)
@@ -1273,8 +1299,15 @@
   (setq doom-modeline-indent-info t)
   (setq doom-modeline-hud t)
   (setq doom-modeline-buffer-file-name-style 'truncate-upto-project)
-  
-  (add-hook 'after-init-hook 'doom-modeline-mode)
+
+  :config
+  ;; Fix an issue where these two variables aren't defined in TTY Emacs on MacOS
+  (defvar mouse-wheel-down-event nil)
+  (defvar mouse-wheel-up-event nil)
+
+  (add-hook 'after-load-theme-hook #'doom-modeline-refresh-bars)
+  (remove-hook 'display-time-mode-hook #'doom-modeline-override-time)
+  (remove-hook 'doom-modeline-mode-hook #'doom-modeline-override-time)
   )
 
 ;;;; expand-region
@@ -1393,6 +1426,76 @@
   (winum-mode 1)
   )
 
+;;;; celestial-mode-line
+
+(use-package celestial-mode-line
+  :after time
+  :init
+  (setq celestial-mode-line-update-interval 3600) ; default 60
+  (setq celestial-mode-line-sunrise-sunset-alist '((sunrise . "🌅") (sunset . "🌄")))
+  (setq celestial-mode-line-phase-representation-alist
+        '((0 . "🌚")(1 . "🌛")(2 . "🌝")(3 . "🌜")))
+  :config
+  (celestial-mode-line-start-timer)
+  )
+
+;;;; keycast
+
+(use-package keycast
+  :config
+  ;; (setq keycast-tab-bar-minimal-width 50) ; 40
+  ;; (setq keycast-tab-bar-format "%10s%k%c%r")
+
+  (dolist (input '(self-insert-command
+                   org-self-insert-command))
+    (add-to-list 'keycast-substitute-alist `(,input "." "Typing…")))
+  (dolist (event '(mouse-event-p
+                   mouse-movement-p
+                   mwheel-scroll
+                   handle-select-window
+                   mouse-set-point mouse-drag-region
+                   dired-next-line ; j
+                   dired-previous-line ; k
+                   next-line
+                   previous-line
+                   evil-next-line ; j
+                   evil-previous-line ; k
+                   evil-forward-char ; l
+                   evil-backward-char ; h
+                   pixel-scroll-interpolate-up ; <prior> page-up
+                   pixel-scroll-interpolate-down ; <next> page-down
+
+                   toggle-input-method
+                   block-toggle-input-method
+                   evil-formal-state
+                   evil-force-normal-state
+
+                   ;; 2023-10-02 Added for clojure-dev
+                   lsp-ui-doc--handle-mouse-movement
+                   ignore-preserving-kill-region
+                   ;; pdf-view-text-region
+                   ;; pdf-view-mouse-set-region
+                   ;; mouse-set-region
+                   ))
+    (add-to-list 'keycast-substitute-alist `(,event nil)))
+  )
+
+;;;###autoload
+(defun my/load-global-mode-string ()
+  (interactive)
+
+  (when (not (bound-and-true-p display-time-mode))
+    (display-time-mode t))
+
+  (setq global-mode-string (remove 'display-time-string global-mode-string))
+  (setq global-mode-string '("" celestial-mode-line-string display-time-string))
+
+  (doom-modeline-mode +1)
+  (keycast-tab-bar-mode +1)
+  )
+
+(add-hook 'after-init-hook #'my/load-global-mode-string)
+
 ;;;; remember (built-in)
 
 (use-package remember
@@ -1411,6 +1514,22 @@
 (load-file (concat (file-name-as-directory user-emacs-directory) "extra.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "core-funcs.el"))
 ;; (load-file (concat (file-name-as-directory user-emacs-directory) "org-config.el"))
+
+;;; Note-Tacking
+
+(use-package denote-sections)
+
+;;;; DONT org-node
+
+;; (unless (package-installed-p 'org-node)
+;;   (package-vc-install "https://github.com/meedstrom/org-node"))
+
+;; (use-package org-node
+;;   :hook (org-mode . org-node-cache-mode))
+
+;; (global-set-key (kbd "M-s f") #'org-node-find)
+;; (global-set-key (kbd "M-s i") #'org-node-insert-link)
+
 
 ;;; IDE
 
@@ -1455,6 +1574,20 @@
    (tsx-ts-mode . combobulate-mode))
   ;; Amend this to the directory where you keep Combobulate's source
   ;; code.
+  )
+
+;;;; evil-textobj-tree-sitter
+
+(use-package evil-textobj-tree-sitter
+  :after treesit
+  :config
+  ;; bind `function.outer`(entire function block) to `f` for use in things like `vaf`, `yaf`
+  (define-key evil-outer-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.outer"))
+  ;; bind `function.inner`(function block without name and args) to `f` for use in things like `vif`, `yif`
+  (define-key evil-inner-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.inner"))
+
+  ;; You can also bind multiple items and we will match the first one we can find
+  (define-key evil-outer-text-objects-map "a" (evil-textobj-tree-sitter-get-textobj ("conditional.outer" "loop.outer")))
   )
 
 ;;;; eglot
@@ -1585,15 +1718,7 @@
   (setq org-journal-date-format "%Y-%m-%d(%a)")
   (setq org-journal-file-format "%Y%m%dT000000--%Y-%m-%d__journal.org")
   (setq org-journal-time-prefix "* ")
-  (setq org-journal-date-prefix "
-:PROPERTIES:
-:DRINKS:
-:PHONE:
-:KETO:
-:EXERCISE:
-:MOOD:
-:END:
-#+title: ")
+  (setq org-journal-date-prefix "#+title: ")
   ;; org-journal-skip-carryover-drawers (list "LOGBOOK")
   ;; (setq org-journal-enable-agenda-integration t)
   )
@@ -1614,10 +1739,10 @@
 
 ;;;; org-journal-tags
 
-(use-package org-journal-tags
-  :after (org-journal)
-  :config
-  (org-journal-tags-autosync-mode))
+;; (use-package org-journal-tags
+;;   :after (org-journal)
+;;   :config
+;;   (org-journal-tags-autosync-mode))
 
 ;;; Keybindings
 
@@ -1686,5 +1811,191 @@
   )
 
 (+my/open-workspaces)
+
+;;; UI
+
+;;;; modus-themes
+
+(use-package modus-themes
+  :config
+  (setq modus-themes-italic-constructs t
+        modus-themes-bold-constructs t
+        modus-themes-custom-auto-reload t
+
+        ;; Options for `modus-themes-prompts' are either nil (the
+        ;; default), or a list of properties that may include any of those
+        ;; symbols: `italic', `WEIGHT'
+        ;; modus-themes-prompts '(bold)
+
+        ;; The `modus-themes-completions' is an alist that reads two
+        ;; keys: `matches', `selection'.  Each accepts a nil value (or
+        ;; empty list) or a list of properties that can include any of
+        ;; the following (for WEIGHT read further below):
+        ;; `matches'   :: `underline', `italic', `WEIGHT'
+        ;; `selection' :: `underline', `italic', `WEIGHT'
+        ;; modus-themes-completions
+        ;; '((matches   . (semibold))
+        ;;   (selection . (semibold text-also)))
+
+        modus-themes-common-palette-overrides
+        `((fg-mode-line-active fg-main) ; Black
+
+          ;; Comments are yellow, strings are green
+          (comment yellow-cooler)
+          (string green-warmer)
+
+          ;; "Make the mode line borderless"
+          (border-mode-line-active unspecified)
+          (border-mode-line-inactive unspecified)
+
+          ;; "Make matching parenthesis more or less intense"
+          (bg-paren-match bg-magenta-intense)
+          (underline-paren-match unspecified)
+
+          ;; Intense magenta background combined with the main foreground
+          ;; (bg-region bg-magenta-subtle)
+          ;; (fg-region fg-main)
+
+          ;; Links
+          ;; (underline-link border)
+          ;; (underline-link-visited border)
+          ;; (underline-link-symbolic border)
+
+          (bg-heading-0 bg-green-subtle) ; green
+          (bg-heading-1 bg-dim)
+          (bg-heading-2 bg-yellow-subtle)
+          (bg-heading-3 bg-blue-nuanced) ; blue
+
+          ;; copy from intense
+          (overline-heading-0 unspecified)
+          (overline-heading-1 magenta-cooler)
+          (overline-heading-2 magenta-warmer)
+
+          ;; And expand the preset here. Note that the ,@ works because we use
+          ;; the backtick for this list, instead of a straight quote.
+          ;; ,@modus-themes-preset-overrides-faint
+          ;; ,@modus-themes-preset-overrides-intense
+          ))
+
+  (defun my/modus-themes-custom-faces ()
+    (interactive)
+    ;; (message "modus-themes-after-hook : my-modus-themes-custom-faces")
+    (modus-themes-with-colors
+      (custom-set-faces
+       ;; `(tab-bar ((,c :background ,bg-tab-bar)))
+       ;; `(tab-bar-tab-group-current ((,c :inherit bold :background ,bg-tab-current :box (:line-width -2 :color ,bg-tab-current) :foreground ,fg-alt)))
+       ;; `(tab-bar-tab-group-inactive ((,c :background ,bg-tab-bar :box (:line-width -2 :color ,bg-tab-bar) :foreground ,fg-alt)))
+       ;; `(tab-bar-tab ((,c :inherit bold :box (:line-width -2 :color ,bg-tab-current) :background ,bg-tab-current)))
+       ;; `(tab-bar-tab-inactive ((,c :box (:line-width -2 :color ,bg-tab-other) :background ,bg-tab-other)))
+       ;; `(tab-bar-tab-ungrouped ((,c :inherit tab-bar-tab-inactive)))
+       ;; `(fringe ((,c :background ,bg-dim)))
+
+       `(vterm-color-black ((,c :background "gray25" :foreground "gray25")))
+       `(vterm-color-yellow ((,c :background ,yellow-intense :foreground ,yellow-intense)))
+       `(org-mode-line-clock ((,c :inherit bold :foreground ,modeline-info)))
+       `(org-mode-line-clock-overrun ((,c :inherit bold :foreground ,modeline-err)))
+       `(jinx-misspelled ((,c :underline (:style wave :color ,magenta-cooler))))
+       ;; `(keycast-command ((,c :inherit default :height 0.9)))
+       ))
+    (when (display-graphic-p) ; gui
+      (when (locate-library "spacious-padding")
+        (spacious-padding-mode +1)))
+    )
+  (add-hook 'modus-themes-post-load-hook #'my/modus-themes-custom-faces)
+
+  (load-theme 'modus-operandi :no-confirm))
+
+;;;; disable scroll-bar-mode
+
+(when (fboundp 'scroll-bar-mode)
+  (scroll-bar-mode -1))
+
+;;; paren and pair
+;;;; show-paren-mode/electric-pair-mode and customize for org-mode
+
+;; 2023-11-10 puni + electric-pair 사용 중. 이걸 꺼야 org-block 에서 문제가 없다.
+;; 2023-09-28 아니다. 켜 놓은 이유가 있을 것. elctric-pair 가 아니지 않는가?
+;; 스페이스맥스에서 왜 이걸 켜 놓는 것인가?! 일단 끈다.
+;; C-j 누르면 electric-newline-and-maybe-indent 수행. indent 가 안맞는다. 필요 없다.
+;; (electric-indent-mode -1) ; important!! 이렇게 따로 꺼야 한다.
+
+;; https://github.com/alphapapa/smart-tab-over
+;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Matching.html
+;; 괄호만 강조
+(setq show-paren-style 'parenthesis) ; default 'parenthesis
+;; 괄호 입력 후 내용 입력시 괄호를 강조
+(setq show-paren-when-point-inside-paren t)
+;; (setq show-paren-when-point-in-periphery t)
+
+;; 괄호 강조를 즉시 보여준다
+(use-package paren
+  :ensure nil
+  :hook (prog-mode . +show-paren-mode)
+  :config
+  (setq show-paren-delay 0.1
+        show-paren-highlight-openparen t
+        show-paren-when-point-inside-paren t
+        show-paren-when-point-in-periphery nil)
+  (defun +show-paren-mode()
+    (unless show-paren-mode (show-paren-mode))))
+
+;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Matching.html
+;; 괄호, 구분자(delimiter) 자동 쌍 맞추기
+(setq electric-pair-pairs '((?\{ . ?\})
+                            (?\( . ?\))
+                            (?\[ . ?\])
+                            (?\" . ?\")))
+
+;; from Crafted-Emacs - crafted-org-config.el
+;; Disable auto-pairing of "<" or "[" in org-mode with electric-pair-mode
+(defun my/org-enhance-electric-pair-inhibit-predicate ()
+  "Disable auto-pairing of \"<\" or \"[\" in `org-mode' when using `electric-pair-mode'."
+  (when (and electric-pair-mode (eql major-mode #'org-mode))
+    (setq-local electric-pair-inhibit-predicate
+                `(lambda (c)
+                   (if (or (char-equal c ?<)
+                           (char-equal c ?\[ ))
+                       t (,electric-pair-inhibit-predicate c))))))
+
+;; Add hook to both electric-pair-mode-hook and org-mode-hook
+;; This ensures org-mode buffers don't behave weirdly,
+;; no matter when electric-pair-mode is activated.
+(add-hook 'electric-pair-mode-hook #'my/org-enhance-electric-pair-inhibit-predicate)
+(add-hook 'org-mode-hook #'my/org-enhance-electric-pair-inhibit-predicate)
+
+;;;; Corfu and electric-Pair and Jump In/Out Parens
+
+;; Linux GUI : <tab> TAB
+;; Linux Terminal : TAB
+;; Linux GUI : S-<iso-lefttab>
+;; Linux Terminal : <backtab>
+
+;;;###autoload
+(defun jump-out-of-pair ()
+  (interactive)
+  (let ((found (search-forward-regexp "[])}\"'`*=]" nil t)))
+    (when found
+      (cond ((or (looking-back "\\*\\*" 2)
+  		 (looking-back "``" 2)
+  		 (looking-back "\"\"" 2) ; 2023-10-02 added
+  		 (looking-back "''" 2)
+  		 (looking-back "==" 2))
+  	     (forward-char))
+  	    (t (forward-char 0))))))
+;; 절대 하지 말것! (global-set-key [remap indent-for-tab-command] #'jump-out-of-pair)
+
+;;;###autoload
+(defun jump-backward-pair ()
+  (interactive)
+  (let ((found (search-backward-regexp "[])}\"'`*=]" nil t)))
+    (when found
+      (cond ((or (looking-back "\\*\\*" 2)
+                 (looking-back "``" 2)
+                 (looking-back "\"\"" 2) ; 2023-10-02 added
+                 (looking-back "''" 2)
+                 (looking-back "==" 2))
+             (backward-char))
+            (t (backward-char 0))))))
+
 
 ;;; init.el ends here

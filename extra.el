@@ -22,15 +22,6 @@
 ;;; archives
 
 
-;;; which-key
-
-(setq which-key-idle-delay 0.4
-      which-key-idle-secondary-delay 0.01
-      which-key-max-description-length 32
-      which-key-sort-order 'which-key-key-order-alpha
-      which-key-min-display-lines 6
-      which-key-allow-evil-operators t)
-
 ;;; TODO diff-hl
 
 (use-package diff-hl
@@ -259,6 +250,11 @@
 
 (use-package nerd-icons-dired)
 (use-package nerd-icons-completion)
+(use-package nerd-icons-corfu
+  :after corfu
+  :if window-system
+  :config
+  (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 
 (when (display-graphic-p) ; gui
   (add-hook 'dired-mode-hook 'nerd-icons-dired-mode)
