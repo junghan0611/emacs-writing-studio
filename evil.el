@@ -175,7 +175,7 @@
   :after evil
   :hook (org-mode . evil-org-mode)
   :init
-  (setq evil-org-key-theme '(navigation insert textobjects additional todo heading))
+  (setq evil-org-key-theme '(navigation textobjects additional calendar todo)) ; insert heading
 
   (with-eval-after-load 'org-agenda
     (autoload #'evil-org-agenda-set-keys "evil-org-agenda" nil t)
@@ -221,6 +221,8 @@
 
   ;; o :: ace-link-info 이거면 충분하다.
   (define-key evil-insert-state-map (kbd "C-]") 'forward-char)
+  (define-key evil-insert-state-map (kbd "C-k") 'kill-line)
+  ;; (evil-define-key '(insert) prog-mode-map (kbd "C-k") 'kill-line)
 
   (define-key evil-normal-state-map (kbd "C-a") 'evil-beginning-of-line)
   (define-key evil-normal-state-map (kbd "C-e") 'evil-end-of-line-or-visual-line)
@@ -229,7 +231,6 @@
   ;; =C-w= 'insert 'evil-delete-backward-word
   ;; =C-w= 'visual 'evil-window-map
   )
-
 
 ;;; undo-fu
 

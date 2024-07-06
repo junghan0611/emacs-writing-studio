@@ -256,7 +256,8 @@
   :init
   (vertico-mode)
   :custom
-  (vertico-sort-function 'vertico-sort-history-alpha))
+  (vertico-sort-function 'vertico-sort-history-alpha)
+  )
 
 ;; Persist history over Emacs restarts.
 
@@ -327,7 +328,8 @@
   (text-mode . flyspell-mode)
   :bind
   (("C-c w s s" . ispell)
-   ("C-;"       . flyspell-auto-correct-previous-word)))
+   ;; ("C-;"       . flyspell-auto-correct-previous-word)
+   ))
 
 ;;; Ricing Org mode
 
@@ -550,9 +552,9 @@
 ;; Consult-Denote for easy access
 
 (use-package consult-denote
-  :custom
-  (consult-denote-find-command
-   #'(lambda() (find-file (consult-denote-file-prompt))))
+  ;; :custom
+  ;; (consult-denote-find-command
+  ;;  #'(lambda() (find-file (consult-denote-file-prompt))))
   :config
   (consult-denote-mode)
   :bind
@@ -946,7 +948,14 @@
 ;; Show a message when garbage collection happens? Useful while tuning the GC
 ;; (setq garbage-collection-messages t)
 
+(when (fboundp 'scroll-bar-mode)
+  (scroll-bar-mode -1))
+
 ;; (setq ring-bell-function 'ignore)
+
+;;;; minibuffer
+
+(setq enable-recursive-minibuffers t)
 
 ;;;; tab-width
 
@@ -984,7 +993,7 @@
 ;;;; time
 
 (require 'time)
-(setq display-time-format " | %a %e %b, %H:%M | ")
+(setq display-time-format "| %a %e %b, %H:%M |")
 ;; Covered by `display-time-format'
 ;; (setq display-time-24hr-format t)
 ;; (setq display-time-day-and-date t)
@@ -1574,6 +1583,94 @@
   (celestial-mode-line-start-timer)
   )
 
+;;;; paren and pair
+;;;;; show-paren-mode/electric-pair-mode and customize for org-mode
+
+;; 2023-11-10 puni + electric-pair 사용 중. 이걸 꺼야 org-block 에서 문제가 없다.
+;; 2023-09-28 아니다. 켜 놓은 이유가 있을 것. elctric-pair 가 아니지 않는가?
+;; 스페이스맥스에서 왜 이걸 켜 놓는 것인가?! 일단 끈다.
+;; C-j 누르면 electric-newline-and-maybe-indent 수행. indent 가 안맞는다. 필요 없다.
+;; (electric-indent-mode -1) ; important!! 이렇게 따로 꺼야 한다.
+
+;; https://github.com/alphapapa/smart-tab-over
+;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Matching.html
+;; 괄호만 강조
+(setq show-paren-style 'parenthesis) ; default 'parenthesis
+;; 괄호 입력 후 내용 입력시 괄호를 강조
+(setq show-paren-when-point-inside-paren t)
+;; (setq show-paren-when-point-in-periphery t)
+
+;; 괄호 강조를 즉시 보여준다
+(use-package paren
+  :ensure nil
+  :hook (prog-mode . +show-paren-mode)
+  :config
+  (setq show-paren-delay 0.1
+        show-paren-highlight-openparen t
+        show-paren-when-point-inside-paren t
+        show-paren-when-point-in-periphery nil)
+  (defun +show-paren-mode()
+    (unless show-paren-mode (show-paren-mode))))
+
+;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Matching.html
+;; 괄호, 구분자(delimiter) 자동 쌍 맞추기
+(setq electric-pair-pairs '((?\{ . ?\})
+                            (?\( . ?\))
+                            (?\[ . ?\])
+                            (?\" . ?\")))
+
+;; from Crafted-Emacs - crafted-org-config.el
+;; Disable auto-pairing of "<" or "[" in org-mode with electric-pair-mode
+(defun my/org-enhance-electric-pair-inhibit-predicate ()
+  "Disable auto-pairing of \"<\" or \"[\" in `org-mode' when using `electric-pair-mode'."
+  (when (and electric-pair-mode (eql major-mode #'org-mode))
+    (setq-local electric-pair-inhibit-predicate
+                `(lambda (c)
+                   (if (or (char-equal c ?<)
+                           (char-equal c ?\[ ))
+                       t (,electric-pair-inhibit-predicate c))))))
+
+;; Add hook to both electric-pair-mode-hook and org-mode-hook
+;; This ensures org-mode buffers don't behave weirdly,
+;; no matter when electric-pair-mode is activated.
+(add-hook 'electric-pair-mode-hook #'my/org-enhance-electric-pair-inhibit-predicate)
+(add-hook 'org-mode-hook #'my/org-enhance-electric-pair-inhibit-predicate)
+
+;;;;; corfu and electric-Pair and Jump In/Out Parens
+
+;; Linux GUI : <tab> TAB
+;; Linux Terminal : TAB
+;; Linux GUI : S-<iso-lefttab>
+;; Linux Terminal : <backtab>
+
+;;;###autoload
+(defun jump-out-of-pair ()
+  (interactive)
+  (let ((found (search-forward-regexp "[])}\"'`*=]" nil t)))
+    (when found
+      (cond ((or (looking-back "\\*\\*" 2)
+  		 (looking-back "``" 2)
+  		 (looking-back "\"\"" 2) ; 2023-10-02 added
+  		 (looking-back "''" 2)
+  		 (looking-back "==" 2))
+  	     (forward-char))
+  	    (t (forward-char 0))))))
+;; 절대 하지 말것! (global-set-key [remap indent-for-tab-command] #'jump-out-of-pair)
+
+;;;###autoload
+(defun jump-backward-pair ()
+  (interactive)
+  (let ((found (search-backward-regexp "[])}\"'`*=]" nil t)))
+    (when found
+      (cond ((or (looking-back "\\*\\*" 2)
+                 (looking-back "``" 2)
+                 (looking-back "\"\"" 2) ; 2023-10-02 added
+                 (looking-back "''" 2)
+                 (looking-back "==" 2))
+             (backward-char))
+            (t (backward-char 0))))))
+
+
 ;;;; keycast
 
 (use-package keycast
@@ -1650,148 +1747,9 @@
 (load-file (concat (file-name-as-directory user-emacs-directory) "core-funcs.el"))
 ;; (load-file (concat (file-name-as-directory user-emacs-directory) "org-config.el"))
 
-;;; IDE
 
-;;;; treesit-auto
 
-(use-package treesit-auto
-  :custom
-  (treesit-auto-install 'prompt)
-  :config
-  (treesit-auto-add-to-auto-mode-alist 'all)
-  (global-treesit-auto-mode))
-
-;;;; combobulate
-
-;; `M-x combobulate' (default: `C-c o o') to start using Combobulate
-;; (setq c-ts-mode-indent-offset 4)
-(use-package treesit
-  :ensure nil
-  :mode (("\\.tsx\\'" . tsx-ts-mode))
-  :config
-  ;; Do not forget to customize Combobulate to your liking:
-  ;;  M-x customize-group RET combobulate RET
-  )
-
-(unless (package-installed-p 'combobulate)
-  (package-vc-install "https://github.com/mickeynp/combobulate"))
-
-(use-package combobulate
-  :ensure nil
-  :preface
-  ;; You can customize Combobulate's key prefix here.
-  ;; Note that you may have to restart Emacs for this to take effect!
-  (setq combobulate-key-prefix "C-c o")
-  :hook
-  ((python-ts-mode . combobulate-mode)
-   (js-ts-mode . combobulate-mode)
-   (html-ts-mode . combobulate-mode)
-   (css-ts-mode . combobulate-mode)
-   (yaml-ts-mode . combobulate-mode)
-   (typescript-ts-mode . combobulate-mode)
-   (json-ts-mode . combobulate-mode)
-   (tsx-ts-mode . combobulate-mode))
-  ;; Amend this to the directory where you keep Combobulate's source
-  ;; code.
-  )
-
-;;;; evil-textobj-tree-sitter
-
-(use-package evil-textobj-tree-sitter
-  :after treesit
-  :config
-  ;; bind `function.outer`(entire function block) to `f` for use in things like `vaf`, `yaf`
-  (define-key evil-outer-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.outer"))
-  ;; bind `function.inner`(function block without name and args) to `f` for use in things like `vif`, `yif`
-  (define-key evil-inner-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.inner"))
-
-  ;; You can also bind multiple items and we will match the first one we can find
-  (define-key evil-outer-text-objects-map "a" (evil-textobj-tree-sitter-get-textobj ("conditional.outer" "loop.outer")))
-  )
-
-;;;; eglot
-
-(use-package eglot
-  :ensure nil
-  :demand t
-  :commands eglot
-  :bind (:map eglot-mode-map
-              ("C-c d" . eldoc)
-              ("C-c a" . eglot-code-actions)
-              ("C-c r" . eglot-rename))
-  :init
-  (progn
-    (setq eglot-autoshutdown t) ;; shutdown after closing the last managed buffer
-    ;; (setq eglot-sync-connect 0) ;; async, do not block
-    ;; (setq eglot-extend-to-xref t) ;; can be interesting!
-    ;; (setq eglot-send-changes-idle-time 0.7)
-    )
-  :config
-  ;; (add-to-list 'eglot-server-programs '(elixir-ts-mode "language_server.sh"))
-  (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
-
-  ;; whhone
-  (define-key eglot-mode-map
-              [remap xref-find-definitions] #'eglot-find-typeDefinition)
-  (define-key eglot-mode-map
-              [remap xref-find-references] #'eglot-find-declaration)
-  (define-key eglot-mode-map (kbd "M-l r") 'eglot-rename)
-  (define-key eglot-mode-map (kbd "M-l f") 'eglot-format)
-
-  ;; :config
-  ;; Provide `consult-lsp' functionality from `consult-eglot', useful
-  ;; for packages which relay on `consult-lsp' (like `dirvish-subtree').
-  ;; (defalias 'consult-lsp-file-symbols #'consult-eglot-symbols)
-  ;; (define-key eglot-mode-map (kbd "C-c e c") #'consult-eglot-symbols)
-  )
-
-(use-package consult-eglot
-  :after eglot
-  :bind (:map eglot-mode-map
-              ("C-c s" . consult-eglot-symbols)))
-
-;;;; conda
-
-;; (unless (package-installed-p 'conda)
-;;   (package-install 'conda))
-
-(use-package conda)
-
-(require 'conda)
-;; if you want interactive shell support, include:
-(conda-env-initialize-interactive-shells)
-;; if you want eshell support, include:
-;; (conda-env-initialize-eshell)
-;; if you want auto-activation (see below for details), include:
-(conda-env-autoactivate-mode t)
-;; if you want to automatically activate a conda environment on the opening of a file:
-(add-to-list 'find-file-hook (lambda () (when (bound-and-true-p conda-project-env-path)
-                                          (conda-env-activate-for-buffer))))
-
-;;;; hylang
-
-(unless (package-installed-p 'hy-mode)
-  (package-vc-install "https://github.com/jethack23/hy-mode"))
-
-(use-package hy-mode
-  :ensure nil
-  :mode "\\.hy\\'"
-  :interpreter "hy"
-  ;; :hook ((hy-mode . eglot-ensure))
-  :config
-  ;; (set-repl-handler! 'hy-mode #'hy-shell-start-or-switch-to-shell)
-  ;; (set-formatter! 'lisp-indent #'apheleia-indent-lisp-buffer :modes '(hy-mode))
-  (when (executable-find "hyuga") ; it's works!
-    (with-eval-after-load 'eglot
-      (add-to-list 'eglot-server-programs '(hy-mode . ("hyuga"))))
-    )
-  )
-
-;;;; haskell
-
-(use-package haskell-mode)
-
-;;;; formatter
+;;;; formatter - apheleia
 
 ;;;###autoload
 (defun my/format-buffer ()
@@ -1812,8 +1770,6 @@
   (add-hook 'yaml-mode-hook 'apheleia-mode)
   )
 
-;;;; TODO sly for common-lisp
-
 ;;;; emacs-lisp-mode-hook
 
 (add-hook 'emacs-lisp-mode-hook (lambda ()
@@ -1826,9 +1782,186 @@
                                   (define-key emacs-lisp-mode-map (kbd "M-[") 'backward-sexp)
                                   (define-key emacs-lisp-mode-map (kbd "M-]") 'forward-sexp)))
 
-;;; Journal 
 
-;;;; org-journal
+;;;; hl-todo
+
+(use-package hl-todo 
+  :hook (after-init . global-hl-todo-mode))
+
+;;;; breadcrumb
+
+(use-package breadcrumb
+  :init
+  ;; (add-hook 'prog-mode-hook 'breadcrumb-local-mode) ; conflict with lsp-mode
+  (add-hook 'emacs-lisp-mode-hook 'breadcrumb-local-mode)
+  ;; (add-hook 'markdown-mode-hook 'breadcrumb-local-mode)
+  :custom
+  (breadcrumb-project-max-length 0.1)
+  (breadcrumb-imenu-max-length 0.2)
+  )
+
+;; (with-eval-after-load 'popup
+;;   :config
+;;   (define-key popup-menu-keymap (kbd "C-j") 'popup-next)
+;;   (define-key popup-menu-keymap (kbd "C-k") 'popup-previous)
+;;   (define-key popup-menu-keymap (kbd "C-n") 'popup-next)
+;;   (define-key popup-menu-keymap (kbd "C-p") 'popup-previous))
+
+;;; IDE - unless is-termux
+
+;;;; START 
+
+(unless IS-TERMUX
+  
+;;;; treesit-auto
+
+  (use-package treesit-auto
+    :custom
+    (treesit-auto-install 'prompt)
+    :config
+    (treesit-auto-add-to-auto-mode-alist 'all)
+    (global-treesit-auto-mode))
+
+;;;; combobulate
+
+  ;; `M-x combobulate' (default: `C-c o o') to start using Combobulate
+  ;; (setq c-ts-mode-indent-offset 4)
+  (use-package treesit
+    :ensure nil
+    :mode (("\\.tsx\\'" . tsx-ts-mode))
+    :config
+    ;; Do not forget to customize Combobulate to your liking:
+    ;;  M-x customize-group RET combobulate RET
+    )
+
+  (unless (package-installed-p 'combobulate)
+    (package-vc-install "https://github.com/mickeynp/combobulate"))
+
+  (use-package combobulate
+    :ensure nil
+    :preface
+    ;; You can customize Combobulate's key prefix here.
+    ;; Note that you may have to restart Emacs for this to take effect!
+    (setq combobulate-key-prefix "C-c o")
+    :hook
+    ((python-ts-mode . combobulate-mode)
+     (js-ts-mode . combobulate-mode)
+     (html-ts-mode . combobulate-mode)
+     (css-ts-mode . combobulate-mode)
+     (yaml-ts-mode . combobulate-mode)
+     (typescript-ts-mode . combobulate-mode)
+     (json-ts-mode . combobulate-mode)
+     (tsx-ts-mode . combobulate-mode))
+    ;; Amend this to the directory where you keep Combobulate's source
+    ;; code.
+    )
+
+;;;; evil-textobj-tree-sitter
+
+  (use-package evil-textobj-tree-sitter
+    :after treesit
+    :config
+    ;; bind `function.outer`(entire function block) to `f` for use in things like `vaf`, `yaf`
+    (define-key evil-outer-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.outer"))
+    ;; bind `function.inner`(function block without name and args) to `f` for use in things like `vif`, `yif`
+    (define-key evil-inner-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.inner"))
+
+    ;; You can also bind multiple items and we will match the first one we can find
+    (define-key evil-outer-text-objects-map "a" (evil-textobj-tree-sitter-get-textobj ("conditional.outer" "loop.outer")))
+    )
+
+;;;; eglot
+
+  (use-package eglot
+    :ensure nil
+    :demand t
+    :commands eglot
+    :bind (:map eglot-mode-map
+                ("C-c d" . eldoc)
+                ("C-c a" . eglot-code-actions)
+                ("C-c r" . eglot-rename))
+    :init
+    (progn
+      (setq eglot-autoshutdown t) ;; shutdown after closing the last managed buffer
+      ;; (setq eglot-sync-connect 0) ;; async, do not block
+      ;; (setq eglot-extend-to-xref t) ;; can be interesting!
+      ;; (setq eglot-send-changes-idle-time 0.7)
+      )
+    :config
+    ;; (add-to-list 'eglot-server-programs '(elixir-ts-mode "language_server.sh"))
+    (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
+
+    ;; whhone
+    (define-key eglot-mode-map
+                [remap xref-find-definitions] #'eglot-find-typeDefinition)
+    (define-key eglot-mode-map
+                [remap xref-find-references] #'eglot-find-declaration)
+    (define-key eglot-mode-map (kbd "M-l r") 'eglot-rename)
+    (define-key eglot-mode-map (kbd "M-l f") 'eglot-format)
+
+    ;; :config
+    ;; Provide `consult-lsp' functionality from `consult-eglot', useful
+    ;; for packages which relay on `consult-lsp' (like `dirvish-subtree').
+    ;; (defalias 'consult-lsp-file-symbols #'consult-eglot-symbols)
+    ;; (define-key eglot-mode-map (kbd "C-c e c") #'consult-eglot-symbols)
+    )
+
+  (use-package consult-eglot
+    :after eglot
+    :bind (:map eglot-mode-map
+                ("C-c s" . consult-eglot-symbols)))
+
+;;;; conda
+
+  (use-package conda)
+  (require 'conda)
+  ;; if you want interactive shell support, include:
+  (conda-env-initialize-interactive-shells)
+  ;; if you want eshell support, include:
+  ;; (conda-env-initialize-eshell)
+  ;; if you want auto-activation (see below for details), include:
+  (conda-env-autoactivate-mode t)
+  ;; if you want to automatically activate a conda environment on the opening of a file:
+  (add-to-list 'find-file-hook (lambda () (when (bound-and-true-p conda-project-env-path))
+                                 (conda-env-activate-for-buffer)))
+;;;; hylang
+
+  (unless (package-installed-p 'hy-mode)
+    (package-vc-install "https://github.com/jethack23/hy-mode"))
+
+  (use-package hy-mode
+    :ensure nil
+    :mode "\\.hy\\'"
+    :interpreter "hy"
+    ;; :hook ((hy-mode . eglot-ensure))
+    :config
+    ;; (set-repl-handler! 'hy-mode #'hy-shell-start-or-switch-to-shell)
+    ;; (set-formatter! 'lisp-indent #'apheleia-indent-lisp-buffer :modes '(hy-mode))
+    (when (executable-find "hyuga") ; it's works!
+      (with-eval-after-load 'eglot
+        (add-to-list 'eglot-server-programs '(hy-mode . ("hyuga"))))
+      )
+    )
+
+;;;; haskell
+
+  (use-package haskell-mode)
+
+;;;; TODO sly for common-lisp
+
+;;;; END
+  )
+
+;;; Note-Tacking
+
+
+;;;; use-package
+
+(use-package denote-sections)
+(use-package org-pomodoro)
+(use-package org-cliplink)
+;; (use-package org-download)
+;; (use-package async)
 
 (use-package org-journal
   :commands (org-journal-new-entry org-journal-search-forever)
@@ -1845,33 +1978,10 @@
 ;; #+date: [%<%Y-%m-%d %a %H:%M>]\n#+filetags: :journal:\n#+identifier: %<%Y%m%dT000000>\n#+description:\n#+category: Journal\n#+startup: fold\n# #+glossary_sources: global
 ;; #+BEGIN: clocktable :scope agenda :maxlevel 2 :step day :fileskip0 true :tstart \"%<%Y-%m-%d>\" :tend \"%(my/tomorrow)\"
 ;; #+END:
-
-;; (defun org-journal-file-header-func (time)
-;;   "Custom function to create journal header."
-;;   (concat
-;;    (pcase org-journal-file-type
-;;      (`daily "#+TITLE: Daily Journal\n#+STARTUP: showeverything"
-;;              (`weekly "#+TITLE: Weekly Journal\n#+STARTUP: folded")
-;;              (`monthly "#+TITLE: Monthly Journal\n#+STARTUP: folded")
-;;              (`yearly "#+TITLE: Yearly Journal\n#+STARTUP: folded")))))
-;; (setq org-journal-file-header 'org-journal-file-header-func)
-
-;;;; org-journal-tags
-
 ;; (use-package org-journal-tags
 ;;   :after (org-journal)
 ;;   :config
 ;;   (org-journal-tags-autosync-mode))
-
-;;; Note-Tacking
-
-;;;; use-package
-
-(use-package denote-sections)
-(use-package org-pomodoro)
-(use-package org-cliplink)
-;; (use-package org-download)
-;; (use-package async)
 
 ;;;; Load Org-mode
 
@@ -3025,15 +3135,8 @@
 ;; Automatically pick up keybinding changes
 (corkey/load-and-watch)
 
-;;; Easy mode
-
-;;;; context-mode 
-
-;;;; menu-bar
-
-(menu-bar-mode 1)
-
 ;;;; casual-suite
+
 (use-package casual-suite
   :defer 1
   :config
@@ -3045,7 +3148,14 @@
   ;; ibuffer-mode-map
   )
 
-;;; Workspaces
+;;; Easy mode
+
+(unless IS-TERMUX
+  ;; context-mode
+  (menu-bar-mode 1)
+  )
+
+;;; Load Workspaces & Themes
 
 (defun +my/open-workspaces ()
   (interactive)
@@ -3063,103 +3173,6 @@
 
 (+my/open-workspaces)
 
-;;; UI
-
-;;;; disable scroll-bar-mode
-
-(when (fboundp 'scroll-bar-mode)
-  (scroll-bar-mode -1))
-
-;;; paren and pair
-;;;; show-paren-mode/electric-pair-mode and customize for org-mode
-
-;; 2023-11-10 puni + electric-pair 사용 중. 이걸 꺼야 org-block 에서 문제가 없다.
-;; 2023-09-28 아니다. 켜 놓은 이유가 있을 것. elctric-pair 가 아니지 않는가?
-;; 스페이스맥스에서 왜 이걸 켜 놓는 것인가?! 일단 끈다.
-;; C-j 누르면 electric-newline-and-maybe-indent 수행. indent 가 안맞는다. 필요 없다.
-;; (electric-indent-mode -1) ; important!! 이렇게 따로 꺼야 한다.
-
-;; https://github.com/alphapapa/smart-tab-over
-;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Matching.html
-;; 괄호만 강조
-(setq show-paren-style 'parenthesis) ; default 'parenthesis
-;; 괄호 입력 후 내용 입력시 괄호를 강조
-(setq show-paren-when-point-inside-paren t)
-;; (setq show-paren-when-point-in-periphery t)
-
-;; 괄호 강조를 즉시 보여준다
-(use-package paren
-  :ensure nil
-  :hook (prog-mode . +show-paren-mode)
-  :config
-  (setq show-paren-delay 0.1
-        show-paren-highlight-openparen t
-        show-paren-when-point-inside-paren t
-        show-paren-when-point-in-periphery nil)
-  (defun +show-paren-mode()
-    (unless show-paren-mode (show-paren-mode))))
-
-;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Matching.html
-;; 괄호, 구분자(delimiter) 자동 쌍 맞추기
-(setq electric-pair-pairs '((?\{ . ?\})
-                            (?\( . ?\))
-                            (?\[ . ?\])
-                            (?\" . ?\")))
-
-;; from Crafted-Emacs - crafted-org-config.el
-;; Disable auto-pairing of "<" or "[" in org-mode with electric-pair-mode
-(defun my/org-enhance-electric-pair-inhibit-predicate ()
-  "Disable auto-pairing of \"<\" or \"[\" in `org-mode' when using `electric-pair-mode'."
-  (when (and electric-pair-mode (eql major-mode #'org-mode))
-    (setq-local electric-pair-inhibit-predicate
-                `(lambda (c)
-                   (if (or (char-equal c ?<)
-                           (char-equal c ?\[ ))
-                       t (,electric-pair-inhibit-predicate c))))))
-
-;; Add hook to both electric-pair-mode-hook and org-mode-hook
-;; This ensures org-mode buffers don't behave weirdly,
-;; no matter when electric-pair-mode is activated.
-(add-hook 'electric-pair-mode-hook #'my/org-enhance-electric-pair-inhibit-predicate)
-(add-hook 'org-mode-hook #'my/org-enhance-electric-pair-inhibit-predicate)
-
-;;;; Corfu and electric-Pair and Jump In/Out Parens
-
-;; Linux GUI : <tab> TAB
-;; Linux Terminal : TAB
-;; Linux GUI : S-<iso-lefttab>
-;; Linux Terminal : <backtab>
-
-;;;###autoload
-(defun jump-out-of-pair ()
-  (interactive)
-  (let ((found (search-forward-regexp "[])}\"'`*=]" nil t)))
-    (when found
-      (cond ((or (looking-back "\\*\\*" 2)
-  		 (looking-back "``" 2)
-  		 (looking-back "\"\"" 2) ; 2023-10-02 added
-  		 (looking-back "''" 2)
-  		 (looking-back "==" 2))
-  	     (forward-char))
-  	    (t (forward-char 0))))))
-;; 절대 하지 말것! (global-set-key [remap indent-for-tab-command] #'jump-out-of-pair)
-
-;;;###autoload
-(defun jump-backward-pair ()
-  (interactive)
-  (let ((found (search-backward-regexp "[])}\"'`*=]" nil t)))
-    (when found
-      (cond ((or (looking-back "\\*\\*" 2)
-                 (looking-back "``" 2)
-                 (looking-back "\"\"" 2) ; 2023-10-02 added
-                 (looking-back "''" 2)
-                 (looking-back "==" 2))
-             (backward-char))
-            (t (backward-char 0))))))
-
-
-;;; Load theme
-
 (load-theme 'modus-operandi :no-confirm)
-;; (modus-themes-toggle)
+
 ;;; init.el ends here

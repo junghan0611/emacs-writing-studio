@@ -114,8 +114,8 @@
   (define-key vertico-map (kbd "DEL")   'vertico-directory-delete-char)
   (define-key vertico-map (kbd "M-DEL") 'vertico-directory-delete-word)
 
-  (define-key vertico-map (kbd "C-S-j") #'vertico-scroll-down)
-  (define-key vertico-map (kbd "C-S-k") #'vertico-scroll-up)
+  (define-key vertico-map (kbd "C-S-j") #'vertico-scroll-up) ; default
+  (define-key vertico-map (kbd "C-S-k") #'vertico-scroll-down)
 
   (define-key vertico-map (kbd "C-j") #'vertico-next)
   (define-key vertico-map (kbd "C-k") #'vertico-previous)
@@ -128,6 +128,7 @@
 
   (unless (display-graphic-p) ; terminal
     (define-key vertico-map (kbd "M-<return>") #'vertico-exit-input))
+
   )
 
 ;;; outli
