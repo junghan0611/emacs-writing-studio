@@ -1723,10 +1723,14 @@
   (setq global-mode-string '("" celestial-mode-line-string display-time-string))
 
   (doom-modeline-mode +1)
-  (keycast-tab-bar-mode +1)
+
+  (when (string= (system-name)"jhnuc")
+    (keycast-tab-bar-mode +1))
   )
 
-(add-hook 'after-init-hook #'my/load-global-mode-string)
+(unless IS-TERMUX
+  (add-hook 'after-init-hook #'my/load-global-mode-string))
+
 
 ;;;; remember (built-in)
 
