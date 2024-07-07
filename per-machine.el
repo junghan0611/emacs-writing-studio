@@ -48,8 +48,6 @@
 
 ;;; Directory Path
 
-(defconst blog-admin-dir "~/git/blog/")
-
 (defconst user-org-directory (if (getenv "ORG_DIRECTORY")
                                  (getenv "ORG_DIRECTORY")
                                "~/org/"))
@@ -58,11 +56,15 @@
                                      (getenv "PROJECT_DIRECTORY")
                                    "~/git/"))
 
+(defconst blog-admin-dir (concat user-project-directory "blog/"))
+
 ;;; Org-Mode
 
-(if (boundp 'user-org-directory)
-    (setq org-directory user-org-directory)
-  (setq org-directory "~/org/"))
+;; (if (boundp 'user-org-directory)
+;;     (setq org-directory user-org-directory)
+;;   (setq org-directory "~/org/"))
+
+(setq org-directory user-org-directory)
 
 (defun my/expand-org-file-name (filename)
   (expand-file-name filename org-directory))
@@ -98,6 +100,24 @@
 (defun my/org-calendar-directory () (my/expand-org-file-name ".calendar/"))
 (defun my/org-attachment-directory () (my/expand-org-file-name ".attach/"))
 
-(defvar config-bibfiles (list "~/sync/org/bib/zotero-biblatex.bib"))
+(defvar config-bibfiles (list (concat org-directory "bib/zotero-biblatex.bib")))
+
+;;; emacs-type
+
+(defcustom emacs-type 'doomemacs
+  "Select Emacs Distribution Types"
+  :group 'emacs
+  :type  '(choice
+           (const :tag "spacemacs" spacemacs)
+           (const :tag "spacemacs" craftedemacs)
+           (const :tag "doomemacs" doomemacs)
+           (const :tag "vanillaemacs" vanillaemacs)))
+
+(defun is-spacemacs() (eq emacs-type 'spacemacs))
+(defun is-doomemacs() (eq emacs-type 'doomemacs))
+(defun is-craftedemacs() (eq emacs-type 'craftedemacs))
+(defun is-vanillaemacs() (eq emacs-type 'vanillaemacs))
+
+;; (when (is-spacemacs) (message "I Love Spacemacs"))
 
 ;;; per-machine.el ends here

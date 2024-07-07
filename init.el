@@ -906,7 +906,7 @@
 (setq citar-citeproc-csl-styles-dir (concat user-org-directory ".csl"))
 ;; (setq citar-citeproc-csl-locales-dir "~/.csl/locales")
 (setq citar-citeproc-csl-style "apa.csl") ; ieee.csl
-(setq citar-notes-paths '("~/sync/org/bib/"))
+(setq citar-notes-paths (list (concat org-directory "bib/")))
 (setq org-cite-global-bibliography config-bibfiles)
 
 
