@@ -1052,84 +1052,45 @@
 ;;;; completion
 
 (use-package consult
-  :commands consult-ripgrep-noignore
-  :init
-  (advice-add #'project-find-regexp :override #'consult-ripgrep)
-  (advice-add #'project-switch-to-buffer :override #'consult-project-buffer)
   :config
-  (setq consult-narrow-key "?"
-        consult-preview-key "M-.")
+  (setq consult-narrow-key "<")
+  (setq consult-preview-key '("M-." "C-SPC")) ; default any
 
-  (defun consult-delete-default-contents ()
-    (remove-hook 'pre-command-hook 'consult-delete-default-contents)
-    (cond ((member this-command '(self-insert-command))
-           (delete-minibuffer-contents))
-          (t (put-text-property (minibuffer-prompt-end) (point-max) 'face 'default))))
+  ;; default's C-s
+  (define-key minibuffer-local-map (kbd "M-r") 'consult-history)
+  (define-key read-expression-map (kbd "C-r") #'consult-history)
+  (define-key read-expression-map (kbd "M-r") #'consult-history)
 
-  (consult-customize consult-theme
-                     :preview-key '(:debounce 0.2 any)
-                     consult-goto-line consult-imenu consult-line
-                     :preview-key 'any
-                     consult-line
-                     :initial (when-let ((string (thing-at-point 'word)))
-                                (add-hook 'pre-command-hook 'consult-delete-default-contents)
-                                (propertize string 'face 'shadow)))
+  (defun my/consult-find () (interactive) (consult-find "."))
+  (defun my/consult-fd () (interactive) (consult-fd "."))
 
-  ;; https://github.com/minad/consult/wiki#temporarily-override-consult-ripgrep-args
-  (defun consult--ripgrep-noignore-builder (input)
-    "consult--ripgrep-builder with INPUT, but ignores .gitignore."
-    (let ((consult-ripgrep-args
-           (if (string-match-p "--no-ignore-vcs" consult-ripgrep-args)
-               consult-ripgrep-args
-             (concat consult-ripgrep-args "--no-ignore-vcs ."))))
-      (consult--make-ripgrep-builder input)))
+  ;; spacemacs/layers/+completion/compleseus/funcs.el
+  (defun my/compleseus-search (use-initial-input initial-directory)
+    (let* ((initial-input (if use-initial-input
+                              (rxt-quote-pcre
+                               (if (region-active-p)
+                                   (buffer-substring-no-properties
+                                    (region-beginning) (region-end))
+                                 (or (thing-at-point 'symbol t) "")))
+                            ""))
+           (default-directory
+            (or initial-directory (read-directory-name "Start from directory: "))))
+      (consult-ripgrep default-directory initial-input)))
 
-  (defun consult-ripgrep-noignore (&optional dir initial)
-    "Do consult-ripgrep with DIR and INITIAL, but without ignoring."
-    (interactive "P")
-    (consult--grep "Ripgrep"
-                   #'consult--ripgrep-noignore-builder
-                   ;; Here the directory prompt is called by default to avoid searching from the project root
-                   (if dir dir t) initial))
+  (defun +default/search-cwd-symbol-at-point ()
+    "Search current folder."
+    (interactive)
+    (my/compleseus-search t default-directory))
 
-  (defvar consult--source-project-file
-    `(:name     "Project File"
-                :narrow   ?f
-                :category file
-                :face     consult-file
-                :history  file-name-history
-                :state    ,#'consult--file-state
-                :enabled  ,(lambda () consult-project-function)
-                :items
-                ,(lambda ()
-                   (when-let (project (project-current t))
-                     (let* ((all-files (project-files project))
-                            (common-parent-directory
-                             (let ((common-prefix (try-completion "" all-files)))
-                               (if (> (length common-prefix) 0)
-                                   (file-name-directory common-prefix))))
-                            (cpd-length (length common-parent-directory))
-                            items)
-                       (print all-files)
-                       (dolist (file all-files items)
-                         (let ((part (substring file cpd-length)))
-                           (when (equal part "") (setq part "./"))
-                           (put-text-property 0 1 'multi-category `(file . ,file) part)
-                           (push part items))))))
-                "Project file candidate source for `consult-buffer'."))
+  (consult-customize
+   +default/search-cwd-symbol-at-point
+   :preview-key '("M-." "C-SPC"))
 
-  (defvar consult--source-project-file-hidden
-    `(:hidden t :narrow (?f . "Project File") ,@consult--source-project-file)
-    "Like `consult--source-project-file' but hidden by default.")
+  (consult-customize
+   consult-theme
+   :preview-key '("M-." "C-SPC"
+                  :debounce 3.0 any))
 
-  (defvar consult--source-project-recent-file-override
-    `(:name "Recent File" :narrow (?r . "Recent File") ,@consult--source-project-file)
-    "Like `consult--source-recent-file' but overridden the narrow key.")
-
-  (setq consult-project-buffer-sources
-        '(consult--source-project-buffer
-          consult--source-project-recent-file-override
-          consult--source-project-file-hidden))
   ;; :general
   ;; ([remap switch-to-buffer]    'consult-buffer
   ;;  [remap goto-line]           'consult-goto-line
@@ -1395,7 +1356,6 @@
 ;;;; which-key
 
 (require 'which-key)
-(setq which-key-popup-type 'minibuffer)
 (setq which-key-idle-delay 0.4
       which-key-idle-secondary-delay 0.01
       which-key-allow-evil-operators t)
