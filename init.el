@@ -474,23 +474,24 @@
 
 ;; Emacs Multimedia System
 
-(use-package emms
-  :if window-system
-  :init
-  (require 'emms-setup)
-  (require 'emms-mpris)
-  (emms-all)
-  (emms-default-players)
-  (emms-mpris-enable)
-  :custom
-  (emms-browser-covers #'emms-browser-cache-thumbnail-async)
-  :bind
-  (("C-c w m b" . emms-browser)
-   ("C-c w m e" . emms)
-   ("C-c w m p" . emms-play-playlist )
-   ("<XF86AudioPrev>" . emms-previous)
-   ("<XF86AudioNext>" . emms-next)
-   ("<XF86AudioPlay>" . emms-pause)))
+;; (use-package emms
+;;   :if window-system
+;;   ;; :when (eq system-type 'gnu/linux)
+;;   :init
+;;   (require 'emms-setup)
+;;   (require 'emms-mpris)
+;;   (emms-all)
+;;   (emms-default-players)
+;;   (emms-mpris-enable)
+;;   :custom
+;;   (emms-browser-covers #'emms-browser-cache-thumbnail-async)
+;;   :bind
+;;   (("C-c w m b" . emms-browser)
+;;    ("C-c w m e" . emms)
+;;    ("C-c w m p" . emms-play-playlist )
+;;    ("<XF86AudioPrev>" . emms-previous)
+;;    ("<XF86AudioNext>" . emms-next)
+;;    ("<XF86AudioPlay>" . emms-pause)))
 
 (use-package openwith
   :config
