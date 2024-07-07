@@ -30,7 +30,7 @@
 ;;
 ;;; Code:
 
-(setq debug-on-error t)
+;; (setq debug-on-error t)
 
 ;; Emacs 29? EWS leverages functionality from the latest Emacs version.
 
@@ -1343,7 +1343,7 @@
 
 ;; (unless (package-installed-p 'with-editor)
 ;;   (package-vc-install "https://github.com/magit/with-editor"))
-(use-package with-editor)
+;; (use-package with-editor)
 
 (use-package magit
   :demand t
@@ -1814,147 +1814,150 @@
 
 ;;; IDE - unless is-termux
 
+
 ;;;; START 
 
-(unless IS-TERMUX
-  
+(when (eq system-type 'gnu/linux)
+  (unless IS-TERMUX
+    
 ;;;; treesit-auto
 
-  (use-package treesit-auto
-    :custom
-    (treesit-auto-install 'prompt)
-    :config
-    (treesit-auto-add-to-auto-mode-alist 'all)
-    (global-treesit-auto-mode))
+    (use-package treesit-auto
+      :custom
+      (treesit-auto-install 'prompt)
+      :config
+      (treesit-auto-add-to-auto-mode-alist 'all)
+      (global-treesit-auto-mode))
 
 ;;;; combobulate
 
-  ;; `M-x combobulate' (default: `C-c o o') to start using Combobulate
-  ;; (setq c-ts-mode-indent-offset 4)
-  (use-package treesit
-    :ensure nil
-    :mode (("\\.tsx\\'" . tsx-ts-mode))
-    :config
-    ;; Do not forget to customize Combobulate to your liking:
-    ;;  M-x customize-group RET combobulate RET
-    )
+    ;; `M-x combobulate' (default: `C-c o o') to start using Combobulate
+    ;; (setq c-ts-mode-indent-offset 4)
+    (use-package treesit
+      :ensure nil
+      :mode (("\\.tsx\\'" . tsx-ts-mode))
+      :config
+      ;; Do not forget to customize Combobulate to your liking:
+      ;;  M-x customize-group RET combobulate RET
+      )
 
-  (unless (package-installed-p 'combobulate)
-    (package-vc-install "https://github.com/mickeynp/combobulate"))
+    (unless (package-installed-p 'combobulate)
+      (package-vc-install "https://github.com/mickeynp/combobulate"))
 
-  (use-package combobulate
-    :ensure nil
-    :preface
-    ;; You can customize Combobulate's key prefix here.
-    ;; Note that you may have to restart Emacs for this to take effect!
-    (setq combobulate-key-prefix "C-c o")
-    :hook
-    ((python-ts-mode . combobulate-mode)
-     (js-ts-mode . combobulate-mode)
-     (html-ts-mode . combobulate-mode)
-     (css-ts-mode . combobulate-mode)
-     (yaml-ts-mode . combobulate-mode)
-     (typescript-ts-mode . combobulate-mode)
-     (json-ts-mode . combobulate-mode)
-     (tsx-ts-mode . combobulate-mode))
-    ;; Amend this to the directory where you keep Combobulate's source
-    ;; code.
-    )
+    (use-package combobulate
+      :ensure nil
+      :preface
+      ;; You can customize Combobulate's key prefix here.
+      ;; Note that you may have to restart Emacs for this to take effect!
+      (setq combobulate-key-prefix "C-c o")
+      :hook
+      ((python-ts-mode . combobulate-mode)
+       (js-ts-mode . combobulate-mode)
+       (html-ts-mode . combobulate-mode)
+       (css-ts-mode . combobulate-mode)
+       (yaml-ts-mode . combobulate-mode)
+       (typescript-ts-mode . combobulate-mode)
+       (json-ts-mode . combobulate-mode)
+       (tsx-ts-mode . combobulate-mode))
+      ;; Amend this to the directory where you keep Combobulate's source
+      ;; code.
+      )
 
 ;;;; evil-textobj-tree-sitter
 
-  (use-package evil-textobj-tree-sitter
-    :after treesit
-    :config
-    ;; bind `function.outer`(entire function block) to `f` for use in things like `vaf`, `yaf`
-    (define-key evil-outer-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.outer"))
-    ;; bind `function.inner`(function block without name and args) to `f` for use in things like `vif`, `yif`
-    (define-key evil-inner-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.inner"))
+    (use-package evil-textobj-tree-sitter
+      :after treesit
+      :config
+      ;; bind `function.outer`(entire function block) to `f` for use in things like `vaf`, `yaf`
+      (define-key evil-outer-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.outer"))
+      ;; bind `function.inner`(function block without name and args) to `f` for use in things like `vif`, `yif`
+      (define-key evil-inner-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.inner"))
 
-    ;; You can also bind multiple items and we will match the first one we can find
-    (define-key evil-outer-text-objects-map "a" (evil-textobj-tree-sitter-get-textobj ("conditional.outer" "loop.outer")))
-    )
+      ;; You can also bind multiple items and we will match the first one we can find
+      (define-key evil-outer-text-objects-map "a" (evil-textobj-tree-sitter-get-textobj ("conditional.outer" "loop.outer")))
+      )
 
 ;;;; eglot
 
-  (use-package eglot
-    :ensure nil
-    :demand t
-    :commands eglot
-    :bind (:map eglot-mode-map
-                ("C-c d" . eldoc)
-                ("C-c a" . eglot-code-actions)
-                ("C-c r" . eglot-rename))
-    :init
-    (progn
-      (setq eglot-autoshutdown t) ;; shutdown after closing the last managed buffer
-      ;; (setq eglot-sync-connect 0) ;; async, do not block
-      ;; (setq eglot-extend-to-xref t) ;; can be interesting!
-      ;; (setq eglot-send-changes-idle-time 0.7)
+    (use-package eglot
+      :ensure nil
+      :demand t
+      :commands eglot
+      :bind (:map eglot-mode-map
+                  ("C-c d" . eldoc)
+                  ("C-c a" . eglot-code-actions)
+                  ("C-c r" . eglot-rename))
+      :init
+      (progn
+        (setq eglot-autoshutdown t) ;; shutdown after closing the last managed buffer
+        ;; (setq eglot-sync-connect 0) ;; async, do not block
+        ;; (setq eglot-extend-to-xref t) ;; can be interesting!
+        ;; (setq eglot-send-changes-idle-time 0.7)
+        )
+      :config
+      ;; (add-to-list 'eglot-server-programs '(elixir-ts-mode "language_server.sh"))
+      (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
+
+      ;; whhone
+      (define-key eglot-mode-map
+                  [remap xref-find-definitions] #'eglot-find-typeDefinition)
+      (define-key eglot-mode-map
+                  [remap xref-find-references] #'eglot-find-declaration)
+      (define-key eglot-mode-map (kbd "M-l r") 'eglot-rename)
+      (define-key eglot-mode-map (kbd "M-l f") 'eglot-format)
+
+      ;; :config
+      ;; Provide `consult-lsp' functionality from `consult-eglot', useful
+      ;; for packages which relay on `consult-lsp' (like `dirvish-subtree').
+      ;; (defalias 'consult-lsp-file-symbols #'consult-eglot-symbols)
+      ;; (define-key eglot-mode-map (kbd "C-c e c") #'consult-eglot-symbols)
       )
-    :config
-    ;; (add-to-list 'eglot-server-programs '(elixir-ts-mode "language_server.sh"))
-    (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
 
-    ;; whhone
-    (define-key eglot-mode-map
-                [remap xref-find-definitions] #'eglot-find-typeDefinition)
-    (define-key eglot-mode-map
-                [remap xref-find-references] #'eglot-find-declaration)
-    (define-key eglot-mode-map (kbd "M-l r") 'eglot-rename)
-    (define-key eglot-mode-map (kbd "M-l f") 'eglot-format)
-
-    ;; :config
-    ;; Provide `consult-lsp' functionality from `consult-eglot', useful
-    ;; for packages which relay on `consult-lsp' (like `dirvish-subtree').
-    ;; (defalias 'consult-lsp-file-symbols #'consult-eglot-symbols)
-    ;; (define-key eglot-mode-map (kbd "C-c e c") #'consult-eglot-symbols)
-    )
-
-  (use-package consult-eglot
-    :after eglot
-    :bind (:map eglot-mode-map
-                ("C-c s" . consult-eglot-symbols)))
+    (use-package consult-eglot
+      :after eglot
+      :bind (:map eglot-mode-map
+                  ("C-c s" . consult-eglot-symbols)))
 
 ;;;; conda
 
-  (use-package conda)
-  (require 'conda)
-  ;; if you want interactive shell support, include:
-  (conda-env-initialize-interactive-shells)
-  ;; if you want eshell support, include:
-  ;; (conda-env-initialize-eshell)
-  ;; if you want auto-activation (see below for details), include:
-  (conda-env-autoactivate-mode t)
-  ;; if you want to automatically activate a conda environment on the opening of a file:
-  (add-to-list 'find-file-hook (lambda () (when (bound-and-true-p conda-project-env-path))
-                                 (conda-env-activate-for-buffer)))
+    (use-package conda)
+    (require 'conda)
+    ;; if you want interactive shell support, include:
+    (conda-env-initialize-interactive-shells)
+    ;; if you want eshell support, include:
+    ;; (conda-env-initialize-eshell)
+    ;; if you want auto-activation (see below for details), include:
+    (conda-env-autoactivate-mode t)
+    ;; if you want to automatically activate a conda environment on the opening of a file:
+    (add-to-list 'find-file-hook (lambda () (when (bound-and-true-p conda-project-env-path))
+                                   (conda-env-activate-for-buffer)))
 ;;;; hylang
 
-  (unless (package-installed-p 'hy-mode)
-    (package-vc-install "https://github.com/jethack23/hy-mode"))
+    (unless (package-installed-p 'hy-mode)
+      (package-vc-install "https://github.com/jethack23/hy-mode"))
 
-  (use-package hy-mode
-    :ensure nil
-    :mode "\\.hy\\'"
-    :interpreter "hy"
-    ;; :hook ((hy-mode . eglot-ensure))
-    :config
-    ;; (set-repl-handler! 'hy-mode #'hy-shell-start-or-switch-to-shell)
-    ;; (set-formatter! 'lisp-indent #'apheleia-indent-lisp-buffer :modes '(hy-mode))
-    (when (executable-find "hyuga") ; it's works!
-      (with-eval-after-load 'eglot
-        (add-to-list 'eglot-server-programs '(hy-mode . ("hyuga"))))
+    (use-package hy-mode
+      :ensure nil
+      :mode "\\.hy\\'"
+      :interpreter "hy"
+      ;; :hook ((hy-mode . eglot-ensure))
+      :config
+      ;; (set-repl-handler! 'hy-mode #'hy-shell-start-or-switch-to-shell)
+      ;; (set-formatter! 'lisp-indent #'apheleia-indent-lisp-buffer :modes '(hy-mode))
+      (when (executable-find "hyuga") ; it's works!
+        (with-eval-after-load 'eglot
+          (add-to-list 'eglot-server-programs '(hy-mode . ("hyuga"))))
+        )
       )
-    )
 
 ;;;; haskell
 
-  (use-package haskell-mode)
+    (use-package haskell-mode)
 
 ;;;; TODO sly for common-lisp
 
 ;;;; END
+    )
   )
 
 ;;; Note-Tacking
@@ -3150,7 +3153,7 @@
   (define-key dired-mode-map (kbd "<f2>") #'casual-dired-tmenu)
   (define-key calc-mode-map (kbd "<f2>") #'casual-calc-tmenu)
   (define-key isearch-mode-map (kbd "<f2>") #'casual-isearch-tmenu)
-  ;; ibuffer-mode-map
+  (define-key ibuffer-mode-map (kbd "<f2>") #'casual-ibuffer-tmenu)
   )
 
 ;;; Easy mode
