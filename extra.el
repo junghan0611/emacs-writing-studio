@@ -373,7 +373,7 @@
         tab-bar-close-button-show nil
         ;; tab-bar-separator " ❘ "
         tab-bar-auto-width nil)
-  ;; (setq tab-bar-tab-hints t) ; for tab-bar-circle-number
+  (setq tab-bar-tab-hints t) ; for tab-bar-circle-number
 
   (setq tab-bar-tab-name-truncated-max 15
         tab-bar-tab-name-function #'tab-bar-tab-name-truncated) ;; #'tab-bar-tab-name-current ; default
@@ -381,7 +381,7 @@
   (setq tab-bar-format                    ; Emacs 28
         '(
           ;; tab-bar-separator
-          tab-bar-format-menu-bar
+          ;; tab-bar-format-menu-bar
           tab-bar-format-tabs-groups
           ;; tab-bar-separator
           ;; tab-bar-format-add-tab ;; turn on tab-bar-new-button

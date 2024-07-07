@@ -382,12 +382,12 @@
   (:color amaranth :exit t :quit-key "q")
   "Jump to directory"
 
-  ("b" (find-file "~/git/blog") "blog")
-  ("n" (find-file "~/sync/org/notes") "notes")
+  ("b" (find-file (concat user-project-directory "blog") "blog"))
+  ("n" (find-file (concat user-project-directory "notes") "notes"))
   ("c" (find-file "~/nosync/clone-notes/") "clone-notes")
   ("C" (find-file "~/sync/markdown/cheat") "cheat")
   ("m" (find-file "~/sync/man") "man")
-  ("o" (find-file "~/sync/org/") "org")
+  ("o" (find-file (concat org-directory) "org"))
   ("s" (find-file "~/.doom.d/snippets/") "snippets")
   ("p" (find-file "~/sync/markdown/prompt") "Prompt")
   ("P" (find-file "~/Pictures") "Pictures")
@@ -398,7 +398,6 @@
   ("u" (find-file "~/Public") "Public")
   ("t" (find-file "~/Templates") "Templates")
   ("q" nil "Quit" :color red :exit t))
-
 
 ;;;; Hydra-All > hydra-bm
 
