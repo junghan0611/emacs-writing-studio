@@ -2389,12 +2389,12 @@
   (setq org-adapt-indentation t)
   (setq org-startup-indented nil) ; doom t
   (setq org-src-preserve-indentation nil) ; doom t
-  ;; (setq org-edit-src-content-indentation 0) ; MINE
+  (setq org-edit-src-content-indentation 0) ; MINE
 
   ;; Reduce org-indent-indentation-per-level from 2 to 1.
   ;; This keeps =org-tags-column= the same for all headings.
   ;; Avoid inconsistency when eidting outside Emacs, like Orgzly and Beorg.
-  ;; (setq org-indent-indentation-per-level 1) ; 2024-06-19 enable, 2024-06-27 turn-off
+  (setq org-indent-indentation-per-level 1) ; 2024-06-19 enable, 2024-06-27 turn-off
 
 ;;;; defer-font-lock
 
