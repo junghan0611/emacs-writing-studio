@@ -347,9 +347,9 @@
 
 ;; Show hidden emphasis markers
 
-(use-package org-appear
-  :hook
-  (org-mode . org-appear-mode))
+;; (use-package org-appear
+;;   :hook
+;;   (org-mode . org-appear-mode))
 
 ;; LaTeX previews
 
