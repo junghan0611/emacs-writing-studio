@@ -303,4 +303,18 @@
   (global-set-key (kbd "C-c n") ews-denote-map)
   )
 
+;;; org-mode-map
+
+;; Org mode keymap modifications
+(with-eval-after-load 'org
+  (keymap-set org-mode-map "C-x n b" #'org-cite-insert)
+  (keymap-set org-mode-map "C-x n -" #'bh/insert-inactive-timestamp)
+  (keymap-set org-mode-map "M-s ," #'denote-rename-file-using-front-matter)
+  ;; (keymap-set org-mode-map "C-c n o" ews-org-noter-map)
+  ;; (keymap-set org-mode-map "C-c n u" ews-org-transclusion-map)
+  (keymap-set org-mode-map "C-x n 0" #'ews-org-insert-notes-drawer)
+  (keymap-set org-mode-map "C-x n 9" #'ews-org-count-words)
+  (keymap-set org-mode-map "C-x n 8" #'ews-org-insert-screenshot)
+  )
+
 ;;; keys.el ends here

@@ -48,9 +48,10 @@
 
 ;;; Directory Path
 
-(defconst user-org-directory (if (getenv "ORG_DIRECTORY")
-                                 (getenv "ORG_DIRECTORY")
-                               "~/org/"))
+;; (defconst user-org-directory (if (getenv "ORG_DIRECTORY")
+;;                                  (getenv "ORG_DIRECTORY")
+;;                                "~/org/"))
+(defconst user-org-directory "~/sync/winmacs/org/")
 
 (defconst user-project-directory (if (getenv "PROJECT_DIRECTORY")
                                      (getenv "PROJECT_DIRECTORY")
@@ -100,7 +101,6 @@
 (defun my/org-calendar-directory () (my/expand-org-file-name ".calendar/"))
 (defun my/org-attachment-directory () (my/expand-org-file-name ".attach/"))
 
-(defvar config-bibfiles (list (concat org-directory "bib/zotero-biblatex.bib")))
 
 ;;; emacs-type
 

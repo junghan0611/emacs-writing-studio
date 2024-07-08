@@ -316,16 +316,16 @@
 ;; Check spelling with flyspell and hunspell
 
 (use-package flyspell
-  :custom
-  (ispell-program-name "hunspell")
-  (ispell-dictionary ews-hunspell-dictionaries)
-  (flyspell-mark-duplications-flag nil) ;; Writegood mode does this
-  (org-fold-core-style 'overlays) ;; Fix Org mode bug
-  :config
-  (ispell-set-spellchecker-params)
-  (ispell-hunspell-add-multi-dic ews-hunspell-dictionaries)
-  :hook
-  (text-mode . flyspell-mode)
+  ;; :custom
+  ;; (ispell-program-name "hunspell")
+  ;; (ispell-dictionary ews-hunspell-dictionaries)
+  ;; (flyspell-mark-duplications-flag nil) ;; Writegood mode does this
+  ;; (org-fold-core-style 'overlays) ;; Fix Org mode bug
+  ;; :config
+  ;; (ispell-set-spellchecker-params)
+  ;; (ispell-hunspell-add-multi-dic ews-hunspell-dictionaries)
+  ;; :hook
+  ;; (text-mode . flyspell-mode)
   :bind
   (("C-c w s s" . ispell)
    ;; ("C-;"       . flyspell-auto-correct-previous-word)
@@ -896,19 +896,19 @@
 
 ;;;; Overide path and configs
 
-(setq ews-bibtex-directory (concat user-org-directory "bib"))
-(setq ews-hunspell-dictionaries "ko_KR")
+(setq ews-hunspell-dictionaries "en_US") ; ko_KR
 (setq denote-directory user-org-directory)
 
-(setq citar-bibliography config-bibfiles)
+(setq ews-bibtex-directory (concat org-directory "library"))
+(setq citar-bibliography (list (concat org-directory "library/emacs-writing-studio.bib")))
+
 ;; use #+cite_export: csl apa.csl
-(setq org-cite-csl-styles-dir (concat user-org-directory ".csl"))
-(setq citar-citeproc-csl-styles-dir (concat user-org-directory ".csl"))
+;; (setq org-cite-csl-styles-dir (concat user-org-directory ".csl"))
+;; (setq citar-citeproc-csl-styles-dir (concat user-org-directory ".csl"))
 ;; (setq citar-citeproc-csl-locales-dir "~/.csl/locales")
 (setq citar-citeproc-csl-style "apa.csl") ; ieee.csl
-(setq citar-notes-paths (list (concat org-directory "bib/")))
-(setq org-cite-global-bibliography config-bibfiles)
-
+;; (setq citar-notes-paths (list (concat org-directory "bib/")))
+(setq org-cite-global-bibliography citar-bibliography)
 
 ;;;; Load Evil
 
@@ -2500,24 +2500,6 @@
   (setq org-user-agenda-files (list
                                (my/org-inbox-file)
                                (my/org-tasks-file)
-                               (my/org-diary-file)
-                               (my/org-life-file)
-
-                               ;; (my/org-contacts-file)
-                               ;; (my/org-drill-file)
-                               ;; (my/org-quote-file)
-                               ;; (my/org-mobile-file)
-                               ;; (my/org-links-file)
-
-                               ;; (my/org-kdc-file)
-                               ;; (my/org-tags-file)
-                               ;; (my/org-glossary-file)
-
-                               ;; (my/org-blog-file)
-                               ;; (my/org-reading-file)
-
-                               ;; (my/org-remember-file)
-                               ;; ;; (my/org-remark-file)
                                ))
   (setq org-agenda-files org-user-agenda-files)
 
