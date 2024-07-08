@@ -61,7 +61,7 @@
   :custom
   (use-package-always-ensure t)
   (package-native-compile t)
-  ;; (warning-minimum-level :emergency)
+  (warning-minimum-level :emergency)
   )
 
 ;; Load EWS functions
@@ -1710,8 +1710,7 @@
 ;; (load-file (concat (file-name-as-directory user-emacs-directory) "meow.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "extra.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "core-funcs.el"))
-;; (load-file (concat (file-name-as-directory user-emacs-directory) "org-config.el"))
-
+(load-file (concat (file-name-as-directory user-emacs-directory) "org-funcs.el"))
 
 
 ;;;; formatter - apheleia

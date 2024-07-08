@@ -244,4 +244,63 @@
 (global-set-key (kbd "C-h B") 'embark-bindings) ;; alternative for `describe-bindings'
 
 
+;;; denote
+
+(when (locate-library "denote")
+  (defvar-keymap ews-denote-map
+    :doc "Denote keybindings."
+
+    "0" #'my/denote-info
+    "a" #'my/denote-attach
+
+    "b" #'denote-show-backlinks-buffer
+    "M-b" 'denote-find-backlink
+
+    "d" #'denote-create-note
+    "D" #'denote-org-dblock-insert-links
+
+    "f" #'my/denote-find-file
+    "M-f" #'denote-find-link
+
+    "e" #'prot-eshell-export
+
+    ;; "o" #'consult-denote-open
+    "o" #'denote-silo-extras-create-note
+    "O" #'denote-silo-extras-open-or-create
+
+    "i" #'denote-org-extras-dblock-insert-links
+    "I" #'denote-org-extras-dblock-insert-backlinks
+    "M-i" #'denote-org-extras-dblock-insert-files
+
+    "l" #'denote-link-or-create
+    "L" #'denote-link-after-creating-with-command
+
+    "n" #'my/goto-denote-dired
+
+    "m" #'denote-add-missing-links
+
+    "g" #'my/denote-grep
+
+    "t" #'denote-type
+
+    "r" #'denote-region ; "contents" mnemonic
+    ;; "r" #'denote-rename-file
+    ;; "R" #'denote-rename-file-using-front-matter
+    "," #'denote-rename-file-using-front-matter
+    "?" #'my/denote-random-note
+
+    ;; "s" #'denote-subdirectory
+    "s" #'denote-sort-dired
+    "S" #'my/denote-sort-with-days
+
+    "k" #'denote-keywords-add
+    "K" #'denote-keywords-remove
+
+    ;; "z" #'denote-signature ; "zettelkasten" mnemonic
+    ;; "Z" #'efls/denote-signature-buffer
+    )
+
+  (global-set-key (kbd "C-c n") ews-denote-map)
+  )
+
 ;;; keys.el ends here
