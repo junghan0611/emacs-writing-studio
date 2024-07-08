@@ -954,6 +954,11 @@
 
 ;; (setq ring-bell-function 'ignore)
 
+;;;; autorevert
+
+(global-auto-revert-mode 1) ; doom nil
+;; (setq auto-revert-interval 10) 
+
 ;;;; minibuffer
 
 (setq enable-recursive-minibuffers t)
@@ -1919,7 +1924,7 @@
     )
   )
 
-;;; Note-Tacking
+;;; Notetaking
 
 
 ;;;; use-package
