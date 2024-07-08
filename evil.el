@@ -58,18 +58,6 @@
   ;; More details: https://emacs.stackexchange.com/a/15054:
   (fset 'evil-visual-update-x-selection 'ignore)
 
-  ;; Prevent evil-motion-state from shadowing previous/next sexp
-  (with-eval-after-load 'evil-maps
-    (define-key evil-motion-state-map "L" nil)
-    (define-key evil-motion-state-map "M" nil)
-
-    (evil-global-set-key 'normal (kbd "DEL") 'evil-switch-to-windows-last-buffer) ; Backspace
-
-    ;; evil macro
-    (define-key evil-normal-state-map (kbd "q") 'nil) ; evil macro disable
-    (define-key evil-normal-state-map (kbd "Q") 'evil-record-macro)
-    )
-
   ;; Focus new window after splitting
   (setq evil-split-window-below t
         evil-vsplit-window-right t) ; default nil
@@ -78,65 +66,15 @@
   ;; less often.
   (setq evil-ex-substitute-global t) ; default nil
 
-;;;###autoload
-  (defun block-toggle-input-method ()
-    (interactive)
-    (message (format "Input method is disabled in <%s> state." evil-state)))
-
-;;;###autoload
-  (defun check-evil-cursor-state-between-window-switch ()
-    (let ((type (pcase current-input-method
-                  ('nil 'bar)
-                  ("korean-hangul" 'hbar))))
-      (setq-local evil-insert-state-cursor type)))
-
-
-  (defmacro defadvice! (symbol arglist &optional docstring &rest body)
-    "Define an advice called SYMBOL and add it to PLACES.
-
-ARGLIST is as in `defun'. WHERE is a keyword as passed to `advice-add', and
-PLACE is the function to which to add the advice, like in `advice-add'.
-DOCSTRING and BODY are as in `defun'.
-
-\(fn SYMBOL ARGLIST &optional DOCSTRING &rest [WHERE PLACES...] BODY\)"
-    (declare (doc-string 3) (indent defun))
-    (unless (stringp docstring)
-      (push docstring body)
-      (setq docstring nil))
-    (let (where-alist)
-      (while (keywordp (car body))
-        (push `(cons ,(pop body) (ensure-list ,(pop body)))
-              where-alist))
-      `(progn
-         (defun ,symbol ,arglist ,docstring ,@body)
-         (dolist (targets (list ,@(nreverse where-alist)))
-           (dolist (target (cdr targets))
-             (advice-add target (car targets) #',symbol))))))
-
-  (progn
-    ;; keep evil insert cursor status per input-method
-    ;; 2024-04-09 커서 상태 기반 한영 입력! 커서를 신뢰하라!
-    ;; - 버퍼 전환 시 커서 상태 유지
-    ;; - 커서를 보면 input-method 온오프를 알 수 있다.
-    ;; - 한영 전환은 insert 모드에서만 가능
-    (mapc (lambda (mode)
-            (let ((keymap (intern (format "evil-%s-state-map" mode))))
-              (define-key (symbol-value keymap) (kbd "<Hangul>") #'block-toggle-input-method)
-              (define-key (symbol-value keymap) (kbd "S-SPC") #'block-toggle-input-method)))
-          '(motion normal visual))
-
-    (add-hook 'evil-insert-state-entry-hook 'check-evil-cursor-state-between-window-switch)
-
-    (defadvice! change-cursor-after-toggle-input (fn &optional arg interactive)
-      :around #'toggle-input-method
-      :around #'set-input-method
-      (funcall fn arg interactive)
-      (let ((type (pcase current-input-method
-                    ('nil 'bar)
-                    ("korean-hangul" 'hbar))))
-        (setq-local evil-insert-state-cursor type)))
-    )
   )
+
+;;; evil-nerd-commenter
+
+(use-package evil-nerd-commenter
+  :after evil
+  :config
+  ;; Turn on Evil Nerd Commenter
+  (evilnc-default-hotkeys))
 
 ;;; evil-escape
 
@@ -191,11 +129,6 @@ DOCSTRING and BODY are as in `defun'.
   (keymap-set vertico-map "C-k" #'vertico-previous)
   (keymap-set vertico-map "M-h" #'vertico-directory-up))
 
-(use-package evil-nerd-commenter
-  :after evil
-  :config
-  ;; Turn on Evil Nerd Commenter
-  (evilnc-default-hotkeys))
 
 
 ;;; more motions
@@ -217,6 +150,15 @@ DOCSTRING and BODY are as in `defun'.
   ;; replace "." search with consul-line in Evil normal state
   ;; use default "/" evil search
   (evil-global-set-key 'normal "." 'consult-line)
+
+  (define-key evil-motion-state-map "L" nil)
+  (define-key evil-motion-state-map "M" nil)
+
+  (evil-global-set-key 'normal (kbd "DEL") 'evil-switch-to-windows-last-buffer) ; Backspace
+
+  ;; evil macro
+  (define-key evil-normal-state-map (kbd "q") 'nil) ; evil macro disable
+  (define-key evil-normal-state-map (kbd "Q") 'evil-record-macro)
 
   ;; o :: ace-link-info 이거면 충분하다.
   (define-key evil-insert-state-map (kbd "C-]") 'forward-char)
@@ -257,6 +199,69 @@ DOCSTRING and BODY are as in `defun'.
 
   (setq evil-undo-system 'undo-fu)
   (evil-set-undo-system 'undo-fu)
+  )
+
+;;; toggle for input-method
+
+(with-eval-after-load 'evil
+
+;;;###autoload
+  (defun block-toggle-input-method ()
+    (interactive)
+    (message (format "Input method is disabled in <%s> state." evil-state)))
+
+;;;###autoload
+  (defun check-evil-cursor-state-between-window-switch ()
+    (let ((type (pcase current-input-method
+                  ('nil 'bar)
+                  ("korean-hangul" 'hbar))))
+      (setq-local evil-insert-state-cursor type)))
+
+  (defmacro defadvice! (symbol arglist &optional docstring &rest body)
+    "Define an advice called SYMBOL and add it to PLACES.
+
+ARGLIST is as in `defun'. WHERE is a keyword as passed to `advice-add', and
+PLACE is the function to which to add the advice, like in `advice-add'.
+DOCSTRING and BODY are as in `defun'.
+
+\(fn SYMBOL ARGLIST &optional DOCSTRING &rest [WHERE PLACES...] BODY\)"
+    (declare (doc-string 3) (indent defun))
+    (unless (stringp docstring)
+      (push docstring body)
+      (setq docstring nil))
+    (let (where-alist)
+      (while (keywordp (car body))
+        (push `(cons ,(pop body) (ensure-list ,(pop body)))
+              where-alist))
+      `(progn
+         (defun ,symbol ,arglist ,docstring ,@body)
+         (dolist (targets (list ,@(nreverse where-alist)))
+           (dolist (target (cdr targets))
+             (advice-add target (car targets) #',symbol))))))
+
+  (progn
+    ;; keep evil insert cursor status per input-method
+    ;; 2024-04-09 커서 상태 기반 한영 입력! 커서를 신뢰하라!
+    ;; - 버퍼 전환 시 커서 상태 유지
+    ;; - 커서를 보면 input-method 온오프를 알 수 있다.
+    ;; - 한영 전환은 insert 모드에서만 가능
+    (mapc (lambda (mode)
+            (let ((keymap (intern (format "evil-%s-state-map" mode))))
+              (define-key (symbol-value keymap) (kbd "<Hangul>") #'block-toggle-input-method)
+              (define-key (symbol-value keymap) (kbd "S-SPC") #'block-toggle-input-method)))
+          '(motion normal visual))
+
+    (add-hook 'evil-insert-state-entry-hook 'check-evil-cursor-state-between-window-switch)
+
+    (defadvice! change-cursor-after-toggle-input (fn &optional arg interactive)
+      :around #'toggle-input-method
+      :around #'set-input-method
+      (funcall fn arg interactive)
+      (let ((type (pcase current-input-method
+                    ('nil 'bar)
+                    ("korean-hangul" 'hbar))))
+        (setq-local evil-insert-state-cursor type)))
+    )
   )
 
 ;;; evil.el ends here
