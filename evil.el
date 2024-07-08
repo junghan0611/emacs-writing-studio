@@ -68,7 +68,23 @@ DOCSTRING and BODY are as in `defun'.
   (setq evil-want-C-w-delete t) ; default t
   (setq evil-want-C-u-scroll t) ; default t
   (setq evil-want-Y-yank-to-eol t)
+
+  (setq
+   evil-default-cursor '+evil-default-cursor-fn
+   evil-normal-state-cursor 'box
+   evil-emacs-state-cursor  '(box +evil-emacs-cursor-fn)
+   evil-insert-state-cursor 'bar
+   evil-visual-state-cursor 'hollow)
+
+  (setq evil-visual-update-x-selection-p nil)
+
   :config
+
+  (defun +evil-default-cursor-fn ()
+    (evil-set-cursor-color (get 'cursor 'evil-normal-color)))
+  (defun +evil-emacs-cursor-fn ()
+    (evil-set-cursor-color (get 'cursor 'evil-emacs-color)))
+
   ;; 'Important' Prevent the cursor from moving beyond the end of line.
   ;; Don't move the block cursor when toggling insert mode
   (setq evil-move-cursor-back nil) ; nil is better - default t
