@@ -1397,7 +1397,7 @@
   (setq doom-modeline-major-mode-icon nil)
   (setq doom-modeline-buffer-modification-icon t)
 
-  ;; (setq doom-modeline-height 35)
+  (setq doom-modeline-height 35)
   (setq doom-modeline-bar-width 10)
 
   (setq doom-modeline-persp-name t) ; doom nil
@@ -1414,6 +1414,10 @@
   ;; Fix an issue where these two variables aren't defined in TTY Emacs on MacOS
   (defvar mouse-wheel-down-event nil)
   (defvar mouse-wheel-up-event nil)
+
+  (doom-modeline-def-modeline 'main
+    '(eldoc bar persp-name workspace-name window-number modals input-method matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
+    '(compilation objed-state misc-info battery grip irc mu4e gnus github debug repl lsp minor-modes indent-info buffer-encoding major-mode process vcs check time))
 
   (add-hook 'after-load-theme-hook #'doom-modeline-refresh-bars)
   (remove-hook 'display-time-mode-hook #'doom-modeline-override-time)

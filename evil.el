@@ -19,6 +19,8 @@
 ;;
 ;;; Code:
 
+;;; evil
+
 (use-package evil
   :demand t
   :hook ((after-init . evil-mode)
@@ -56,102 +58,98 @@
   ;; More details: https://emacs.stackexchange.com/a/15054:
   (fset 'evil-visual-update-x-selection 'ignore)
 
-  ;; (setq evil-insert-state-cursor '(box "#F86155")) ;; better look
-  ;; (setq evil-normal-state-cursor '(box "DarkGoldenrod2"))
+  ;; Prevent evil-motion-state from shadowing previous/next sexp
+  (with-eval-after-load 'evil-maps
+    (define-key evil-motion-state-map "L" nil)
+    (define-key evil-motion-state-map "M" nil)
 
-  (setq evil-normal-state-cursor  '("DarkGoldenrod2" box)
-        evil-insert-state-cursor  '("chartreuse3" (bar . 2))
-        evil-emacs-state-cursor   '("SkyBlue2" box)
-        evil-replace-state-cursor '("chocolate" (hbar . 2))
-        evil-visual-state-cursor  '("gray" (hbar . 2))
-        evil-motion-state-cursor  '("plum3" box))
+    (evil-global-set-key 'normal (kbd "DEL") 'evil-switch-to-windows-last-buffer) ; Backspace
 
-  (progn
-    ;; Thanks to `editorconfig-emacs' for many of these
-    (defvar evil-indent-variable-alist
-      ;; Note that derived modes must come before their sources
-      '(((awk-mode c-mode c++-mode java-mode
-	  idl-mode java-mode objc-mode pike-mode) . c-basic-offset)
-        (groovy-mode . groovy-indent-offset)
-        (python-mode . python-indent-offset)
-        (cmake-mode . cmake-tab-width)
-        (coffee-mode . coffee-tab-width)
-        (cperl-mode . cperl-indent-level)
-        (css-mode . css-indent-offset)
-        (elixir-mode . elixir-smie-indent-basic)
-        ((emacs-lisp-mode lisp-mode) . lisp-indent-offset)
-        (enh-ruby-mode . enh-ruby-indent-level)
-        (erlang-mode . erlang-indent-level)
-        (js2-mode . js2-basic-offset)
-        (js3-mode . js3-indent-level)
-        ((js-mode json-mode) . js-indent-level)
-        (latex-mode . (LaTeX-indent-level tex-indent-basic))
-        (livescript-mode . livescript-tab-width)
-        (mustache-mode . mustache-basic-offset)
-        (nxml-mode . nxml-child-indent)
-        (perl-mode . perl-indent-level)
-        (puppet-mode . puppet-indent-level)
-        (ruby-mode . ruby-indent-level)
-        (rust-mode . rust-indent-offset)
-        (scala-mode . scala-indent:step)
-        (sgml-mode . sgml-basic-offset)
-        (sh-mode . sh-basic-offset)
-        (typescript-mode . typescript-indent-level)
-        (web-mode . web-mode-markup-indent-offset)
-        (yaml-mode . yaml-indent-offset))
-      "An alist where each key is either a symbol corresponding
-  to a major mode, a list of such symbols, or the symbol t,
-  acting as default. The values are either integers, symbols
-  or lists of these.")
+    ;; evil macro
+    (define-key evil-normal-state-map (kbd "q") 'nil) ; evil macro disable
+    (define-key evil-normal-state-map (kbd "Q") 'evil-record-macro)
+    )
 
-    (defun set-evil-shift-width ()
-      "Set the value of `evil-shift-width' based on the indentation settings of the
-  current major mode."
-      (let ((shift-width
-             (catch 'break
-               (dolist (test evil-indent-variable-alist)
-                 (let ((mode (car test))
-                       (val (cdr test)))
-                   (when (or (and (symbolp mode) (derived-mode-p mode))
-                             (and (listp mode) (apply 'derived-mode-p mode))
-                             (eq 't mode))
-                     (when (not (listp val))
-                       (setq val (list val)))
-                     (dolist (v val)
-                       (cond
-                        ((integerp v) (throw 'break v))
-                        ((and (symbolp v) (boundp v))
-                         (throw 'break (symbol-value v))))))))
-               (throw 'break (default-value 'evil-shift-width)))))
-        (when (and (integerp shift-width)
-                   (< 0 shift-width))
-          (setq-local evil-shift-width shift-width))))
+  ;; Focus new window after splitting
+  (setq evil-split-window-below t
+        evil-vsplit-window-right t) ; default nil
 
-    ;; after major mode has changed, reset evil-shift-width
-    (add-hook 'after-change-major-mode-hook #'set-evil-shift-width 'append))
+  ;; Implicit /g flag on evil ex substitution, because I use the default behavior
+  ;; less often.
+  (setq evil-ex-substitute-global t) ; default nil
+
+;;;###autoload
+  (defun block-toggle-input-method ()
+    (interactive)
+    (message (format "Input method is disabled in <%s> state." evil-state)))
+
+;;;###autoload
+  (defun check-evil-cursor-state-between-window-switch ()
+    (let ((type (pcase current-input-method
+                  ('nil 'bar)
+                  ("korean-hangul" 'hbar))))
+      (setq-local evil-insert-state-cursor type)))
+
+
+  (defmacro defadvice! (symbol arglist &optional docstring &rest body)
+    "Define an advice called SYMBOL and add it to PLACES.
+
+ARGLIST is as in `defun'. WHERE is a keyword as passed to `advice-add', and
+PLACE is the function to which to add the advice, like in `advice-add'.
+DOCSTRING and BODY are as in `defun'.
+
+\(fn SYMBOL ARGLIST &optional DOCSTRING &rest [WHERE PLACES...] BODY\)"
+    (declare (doc-string 3) (indent defun))
+    (unless (stringp docstring)
+      (push docstring body)
+      (setq docstring nil))
+    (let (where-alist)
+      (while (keywordp (car body))
+        (push `(cons ,(pop body) (ensure-list ,(pop body)))
+              where-alist))
+      `(progn
+         (defun ,symbol ,arglist ,docstring ,@body)
+         (dolist (targets (list ,@(nreverse where-alist)))
+           (dolist (target (cdr targets))
+             (advice-add target (car targets) #',symbol))))))
 
   (progn
-    (evil-define-text-object evil-pasted (count &rest args)
-      (list (save-excursion (evil-goto-mark ?\[) (point))
-            (save-excursion (evil-goto-mark ?\]) (1+ (point)))))
-    (define-key evil-inner-text-objects-map "P" 'evil-pasted)
+    ;; keep evil insert cursor status per input-method
+    ;; 2024-04-09 커서 상태 기반 한영 입력! 커서를 신뢰하라!
+    ;; - 버퍼 전환 시 커서 상태 유지
+    ;; - 커서를 보면 input-method 온오프를 알 수 있다.
+    ;; - 한영 전환은 insert 모드에서만 가능
+    (mapc (lambda (mode)
+            (let ((keymap (intern (format "evil-%s-state-map" mode))))
+              (define-key (symbol-value keymap) (kbd "<Hangul>") #'block-toggle-input-method)
+              (define-key (symbol-value keymap) (kbd "S-SPC") #'block-toggle-input-method)))
+          '(motion normal visual))
 
-    ;; define text-object for entire buffer
-    (evil-define-text-object evil-inner-buffer (count &optional beg end type)
-      (list (point-min) (point-max)))
-    (define-key evil-inner-text-objects-map "g" 'evil-inner-buffer))
+    (add-hook 'evil-insert-state-entry-hook 'check-evil-cursor-state-between-window-switch)
 
-  ;; allow eldoc to trigger directly after changing modes
-  (eldoc-add-command #'evil-normal-state
-                     #'evil-insert
-                     #'evil-change
-                     #'evil-delete
-                     #'evil-replace)
-
-  (add-hook 'evil-normal-state-exit-hook #'evil-ex-nohighlight)
-  (evil-define-key 'normal org-capture-mode-map "zf" 'reposition-window)
-  ;; (general-def 'insert [remap evil-complete-previous] 'hippie-expand)
+    (defadvice! change-cursor-after-toggle-input (fn &optional arg interactive)
+      :around #'toggle-input-method
+      :around #'set-input-method
+      (funcall fn arg interactive)
+      (let ((type (pcase current-input-method
+                    ('nil 'bar)
+                    ("korean-hangul" 'hbar))))
+        (setq-local evil-insert-state-cursor type)))
+    )
   )
+
+;;; evil-escape
+
+(use-package evil-escape
+  :after evil
+  :init
+  (setq evil-escape-key-sequence ",.") ;; "jk"
+  (setq evil-escape-unordered-key-sequence nil)
+  (setq evil-escape-delay 1.0) ;; 0.5, default 0.1
+  :hook (after-init . evil-escape-mode)
+  )
+
+;;; evil-collection
 
 (use-package evil-collection
   :hook (after-init . evil-collection-init)
@@ -198,6 +196,7 @@
   :config
   ;; Turn on Evil Nerd Commenter
   (evilnc-default-hotkeys))
+
 
 ;;; more motions
 
