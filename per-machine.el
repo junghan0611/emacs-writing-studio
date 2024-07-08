@@ -48,9 +48,18 @@
 
 ;;; Directory Path
 
-;; (defconst user-org-directory (if (getenv "ORG_DIRECTORY")
-;;                                  (getenv "ORG_DIRECTORY")
-;;                                "~/org/"))
+;; (cond
+;;  ((eq system-type 'windows-nt)
+;;   (defconst user-org-directory "~/sync/winmacs/org/")
+;;   )
+;;  ;; ((eq system-type 'darwin) )
+;;  ((eq system-type 'gnu/linux)
+;;   (defconst user-org-directory (if (getenv "ORG_DIRECTORY")
+;;                                    (getenv "ORG_DIRECTORY")
+;;                                  "~/org/"))
+;;   ))
+
+;; for android linux windows 
 (defconst user-org-directory "~/sync/winmacs/org/")
 
 (defconst user-project-directory (if (getenv "PROJECT_DIRECTORY")
@@ -61,46 +70,22 @@
 
 ;;; Org-Mode
 
-;; (if (boundp 'user-org-directory)
-;;     (setq org-directory user-org-directory)
-;;   (setq org-directory "~/org/"))
-
 (setq org-directory user-org-directory)
 
 (defun my/expand-org-file-name (filename)
   (expand-file-name filename org-directory))
 
-(defun my/org-index-file () (my/expand-org-file-name "20240429T165725--index.org"))
-
-;; agenda
-(defun my/org-inbox-file () (my/expand-org-file-name "agenda/20230202T020200--inbox.org"))
-(defun my/org-contacts-file () (my/expand-org-file-name "agenda/20230303T030300--contacts.org"))
-(defun my/org-tasks-file () (my/expand-org-file-name "agenda/20230101T010100--tasks.org"))
-(defun my/org-links-file () (my/expand-org-file-name "agenda/20230219T035500--links.org"))
-(defun my/org-diary-file () (my/expand-org-file-name "agenda/20220101T010100--diary.org"))
-(defun my/org-drill-file () (my/expand-org-file-name "agenda/20240124T164402--drill.org"))
-(defun my/org-mobile-file () (my/expand-org-file-name "agenda/20240312T111900--mobile.org"))
-(defun my/org-quote-file () (my/expand-org-file-name "agenda/20240312T031200--quote.org"))
-(defun my/org-life-file () (my/expand-org-file-name "agenda/20240327T112315--life.org"))
-
-;; meta
-(defun my/org-kdc-file () (my/expand-org-file-name "meta/20240312T142358--kdc.org"))
-(defun my/org-tags-file () (my/expand-org-file-name "meta/20231005T133900--tags.org"))
-(defun my/org-glossary-file () (my/expand-org-file-name "dict/global.org"))
-
-;; posts
-(defun my/org-blog-file () (my/expand-org-file-name "posts/20240104T061355--blog.org"))
-(defun my/org-reading-file () (my/expand-org-file-name "posts/20240329T154123--reading.org"))
-
-;; notes
-(defun my/org-now-file () (my/expand-org-file-name "notes/20240618T125104--now.org"))
-(defun my/org-remark-file () (my/expand-org-file-name "notes/20231111T094444--remark.org"))
-(defun my/org-remember-file () (my/expand-org-file-name "notes/20231020T210500--remember.org"))
+(defun my/org-inbox-file () (my/expand-org-file-name "inbox.org"))
+(defun my/org-tasks-file () (my/expand-org-file-name "tasks.org"))
+(defun my/org-references-file () (my/expand-org-file-name "references.org"))
+(defun my/org-diary-file () (my/expand-org-file-name "diary.org"))
+(defun my/org-blog-file () (my/expand-org-file-name "blog.org"))
+(defun my/org-work-file () (my/expand-org-file-name "work.org"))
+(defun my/org-drill-file () (my/expand-org-file-name "drill.org"))
 
 ;; directory
 (defun my/org-calendar-directory () (my/expand-org-file-name ".calendar/"))
 (defun my/org-attachment-directory () (my/expand-org-file-name ".attach/"))
-
 
 ;;; emacs-type
 

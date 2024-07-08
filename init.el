@@ -1959,6 +1959,64 @@
 ;;   :config
 ;;   (org-journal-tags-autosync-mode))
 
+
+;;;; org-elfeed
+
+(with-eval-after-load 'elfeed
+  (setq rmh-elfeed-org-files (concat user-org-directory "elfeed.org"))
+  (setq elfeed-search-filter "@6-months-ago") ;;  "@1-month-ago +unread"
+  (setq elfeed-search-title-max-width 80) ; default 70
+  (add-hook 'elfeed-search-mode-hook #'elfeed-update)
+  )
+;;;; org-cliplink
+
+(with-eval-after-load 'org-cliplink
+  (require 'org-cliplink)
+  (setq org-cliplink-max-length 72)
+  (setq org-cliplink-ellipsis "-")
+
+  ;; from ohyecloudy
+  (defun my/org-cliplink ()
+    (interactive)
+    (org-cliplink-insert-transformed-title
+     (org-cliplink-clipboard-content)     ;take the URL from the CLIPBOARD
+     #'my-org-link-transformer))
+
+  (defun my-org-link-transformer (url title)
+    (let* ((parsed-url (url-generic-parse-url url)) ;parse the url
+           (host-url (replace-regexp-in-string "^www\\." "" (url-host parsed-url)))
+           (clean-title
+            (cond
+             ;; if the host is github.com, cleanup the title
+             ((string= (url-host parsed-url) "github.com")
+              (replace-regexp-in-string "^/" ""
+                                        (car (url-path-and-query parsed-url))))
+             ;; otherwise keep the original title
+             (t (my-org-cliplink--cleansing-site-title title))))
+           (title-with-url (format "%s - %s" clean-title host-url)))
+      ;; forward the title to the default org-cliplink transformer
+      (org-cliplink-org-mode-link-transformer url title-with-url)))
+
+  (defun my-org-cliplink--cleansing-site-title (title)
+    (let ((result title)
+          (target-site-titles '(" - 위키백과"
+                                " - Wikipedia"
+                                " - PUBLY"
+                                " - YES24"
+                                "알라딘: "
+                                " : 클리앙"
+                                " - YouTube")))
+      (dolist (elem target-site-titles)
+        (if (string-match elem result)
+            (setq result (string-replace elem "" result))
+          result))
+      result))
+
+  ;; 마지막에 host 를 붙이고 싶어서 link transformer 함수를 짰다. =title -
+  ;; ohyecloudy.com= 식으로 org link 를 만든다.
+  (define-key org-mode-map [remap org-cliplink] 'my/org-cliplink)
+  )
+
 ;;;; Load Org-mode
 
 (with-eval-after-load 'org
@@ -2498,29 +2556,6 @@
            ((agenda "")
             (alltodo "")))))
 
-;;;; org-contacts/agenda files
-
-  (if (locate-library "org-contacts")
-      (require 'org-contacts))
-
-  (setq org-contacts-files (list (my/org-contacts-file)))
-
-  ;; My agenda files. keep it simple
-  (setq org-user-agenda-files (list
-                               (my/org-inbox-file)
-                               (my/org-tasks-file)
-                               ))
-  (setq org-agenda-files org-user-agenda-files)
-
-  (setq org-agenda-diary-file (my/org-diary-file))
-  (setq org-default-notes-file (my/org-inbox-file))
-
-  ;; doom-emacs capture files : absolute path
-  (setq +org-capture-todo-file (my/org-inbox-file))
-  (setq +org-capture-projects-file (my/org-tasks-file))
-  (setq +org-capture-notes-file (my/org-inbox-file))
-  (setq +org-capture-changelog-file (my/org-inbox-file))
-  (setq +org-capture-journal-file (my/org-diary-file))
 
 ;;;; org-agenda
 
@@ -2628,84 +2663,6 @@
 
   ;; Save Org buffers after refiling!
   ;; (advice-add 'org-refile :after 'org-save-all-org-buffers)
-
-;;;; consult-org-agenda
-
-  ;; (defun my/consult-org-agenda ()
-  ;;   (interactive)
-  ;;   (consult-org-agenda)
-  ;;   (org-tree-to-indirect-buffer))
-
-  (setq my/consult-org-files '())
-  (add-to-list 'my/consult-org-files (my/org-inbox-file) t)
-  (add-to-list 'my/consult-org-files (my/org-tasks-file) t)
-  (add-to-list 'my/consult-org-files (my/org-links-file) t)
-  (add-to-list 'my/consult-org-files (my/org-contacts-file) t)
-  (add-to-list 'my/consult-org-files (my/org-mobile-file) t)
-  ;; (add-to-list 'my/consult-org-files (my/org-diary-file) t)
-
-  (when (file-exists-p (my/org-blog-file))
-    (add-to-list 'my/consult-org-files (my/org-blog-file) t))
-
-  (when (file-exists-p (my/org-reading-file))
-    (add-to-list 'my/consult-org-files (my/org-reading-file) t))
-
-  ;; (when (file-exists-p (my/org-emacs-config-file))
-  ;;     (add-to-list 'my/consult-org-files (my/org-emacs-config-file) t))
-
-  (defun my/consult-org-all ()
-    (interactive)
-    (consult-org-heading
-     "+LEVEL<=2" ; 3
-     my/consult-org-files))
-
-  (defun my/consult-org-contacts ()
-    (interactive)
-    (consult-org-heading
-     "+LEVEL<=3"
-     (list (my/org-contacts-file))))
-
-  (defun my/consult-org-inbox ()
-    (interactive)
-    (consult-org-heading
-     "+LEVEL<=3"
-     (list (my/org-inbox-file))))
-
-  (defun my/consult-org-tasks ()
-    (interactive)
-    (consult-org-heading
-     "+LEVEL<=3"
-     (list (my/org-tasks-file))))
-
-  (defun my/consult-org-links ()
-    (interactive)
-    (consult-org-heading
-     "+LEVEL<=3"
-     (list (my/org-links-file))))
-
-  (defun my/consult-org-quote ()
-    (interactive)
-    (consult-org-heading
-     "+LEVEL<=3"
-     (list (my/org-quote-file))))
-
-  (defun my/consult-org-kdc ()
-    (interactive)
-    (consult-org-heading
-     "+LEVEL<=3"
-     (list (my/org-kdc-file))))
-
-  (defun my/consult-org-blog ()
-    (interactive)
-    (consult-org-heading
-     "+LEVEL<=3"
-     (list (my/org-blog-file))))
-
-  (defun my/consult-org-reading ()
-    (interactive)
-    (consult-org-heading
-     "+LEVEL<=3"
-     (list (my/org-reading-file))))
 
 ;;;; org-tag and category
 
@@ -2876,117 +2833,69 @@
   (setq org-capture-template-dir (concat user-dotemacs-dir "captures/"))
   (setq org-datetree-add-timestamp t)
 
-  (setq org-capture-templates
-        '(
-          ;; ("t" "todo" entry (file+headline +org-capture-todo-file "Inbox")
-          ;;  "* [ ] %?\n%i\n%a")
+;;;; org-capture templates  
+  
+  ;; The default file for capturing.
+  (setq org-default-notes-file (my/org-inbox-file))
 
-          ;; ("d" "deadline" entry (file+headline +org-capture-todo-file "Inbox")
-          ;;  "* [ ] %?\nDEADLINE: <%(org-read-date)>\n\n%i\n%a")
-
-          ;; ("s" "schedule" entry (file+headline +org-capture-todo-file "Inbox")
-          ;;  "* [ ] %?\nSCHEDULED: <%(org-read-date)>\n\n%i\n%a")
-
-          ;; ("T" "Todo ⏰" entry (file +org-capture-todo-file)
-          ;;  "* TODO [#C] %?\n%T\n%a\n" :clock-in t :clock-resume t)
-
-          ;; ("n" "Notes" entry (file+headline +org-capture-notes-file "Notes")
-          ;;  "* %u %?\n%i\n%a")
-
-          ("j" "Journal" entry (file+olp+datetree +org-capture-journal-file)
-           "* %<%H:%M> - %?\n%T\n%a\n")
-          ;; "* %U %?\n%i\n%a" :prepend t)
-          ("J" "Journal ⏰" entry (file+olp+datetree +org-capture-journal-file)
-           "* %<%H:%M> - %?\n%U\n%a\n" :clock-in t :clock-resume t) ; :tree-type week
-
-          ;; import DOOM Emacs Templates
-          ;; Will use {project-root}/{todo,notes,changelog}.org, unless a
-          ;; {todo,notes,changelog}.org file is found in a parent directory.
-          ;; Uses the basename from `+org-capture-todo-file',
-          ;; `+org-capture-changelog-file' and `+org-capture-notes-file'.
-          ;; ("p" "Templates for projects")
-          ;; ("pt" "Project-local todo" entry  ; {project-root}/todo.org
-          ;;  (file+headline +org-capture-project-todo-file "Inbox")
-          ;;  "* TODO %?\n%i\n%a" :prepend t)
-          ;; ("pn" "Project-local notes" entry  ; {project-root}/notes.org
-          ;;  (file+headline +org-capture-project-notes-file "Inbox")
-          ;;  "* %U %?\n%i\n%a" :prepend t)
-          ;; ("pc" "Project-local changelog" entry  ; {project-root}/changelog.org
-          ;;  (file+headline +org-capture-project-changelog-file "Unreleased")
-          ;;  "* %U %?\n%i\n%a" :prepend t)
-
-          ;; Will use {org-directory}/{+org-capture-projects-file} and store
-          ;; these under {ProjectName}/{Tasks,Notes,Changelog} headings. They
-          ;; support `:parents' to specify what headings to put them under, e.g.
-          ;; :parents ("Projects")
-          ;; ("o" "Centralized templates for projects")
-          ;; ("ot" "Project Todo" entry
-          ;;  (function +org-capture-central-project-todo-file)
-          ;;  "* TODO %?\n %i\n %a"
-          ;;  :heading "Tasks"
-          ;;  :prepend nil)
-          ;; ("on" "Project Notes" entry
-          ;;  (function +org-capture-central-project-notes-file)
-          ;;  "* %U %?\n %i\n %a"
-          ;;  :heading "Notes"
-          ;;  :prepend t)
-          ;; ("oc" "Project Changelog" entry
-          ;;  (function +org-capture-central-project-changelog-file)
-          ;;  "* %U %?\n %i\n %a"
-          ;;  :heading "Changelog"
-          ;;  :prepend t)
-          )
-        )
-
+  ;; Org Capture Templates
+  ;;
   ;; See https://orgmode.org/manual/Template-elements.html#index-org_002ddefault_002dnotes_002dfile-1
-  ;; (setq org-capture-templates nil)
+  (setq org-capture-templates nil)
   (add-to-list
    'org-capture-templates
-   `("i" "Inbox" entry (file+headline ,(my/org-inbox-file) "Inbox")
+   `("i" "Inbox" entry (file+headline ,(my/org-tasks-file) "Inbox")
      "* %?\n%i\n%a"))
 
   (add-to-list
    'org-capture-templates
-   `("I" "Inbox (Work)" entry (file+headline ,(my/org-inbox-file) "Inbox")
-     "* %? :work:\n%i\n%a"))
+   `("I" "Inbox (Work)" entry (file+headline ,(my/org-work-file) "Inbox")
+     "* %?\n%i\n%a"))
 
-  (add-to-list
-   'org-capture-templates
-   `("p" "Project /w template" entry (file+headline ,(my/org-tasks-file) "Projects")
-     (file ,(concat org-capture-template-dir "project.capture"))))
+  ;; (add-to-list
+  ;;  'org-capture-templates
+  ;;  `("p" "Project" entry (file+headline ,(my/org-tasks-file) "Projects")
+  ;;    (file "~/org/.template/project.org")))
 
   (add-to-list
    'org-capture-templates
    `("v" "Vocab" entry (file+headline ,(my/org-drill-file) "Translation")
      "* %? :drill:\n\n** Translation\n\n** Definition\n"))
 
-  (unless IS-TERMUX
-    (add-to-list
-     'org-capture-templates
-     `("c" "Contacts" entry (file ,(my/org-contacts-file))
-       "* %(org-contacts-template-name)\n:PROPERTIES:\n:ID: %(org-id-uuid)\n:GITHUB:\n:EMAIL: a@a.com\n:URL:\n:NOTE:\n:END:\n%U\n%T\n%a\n"))
+;;;; consult-org-agenda 
 
-    (add-to-list
-     'org-capture-templates
-     `("l" "links" entry (file ,(my/org-links-file))
-       "* TODO %(org-cliplink-capture)" :immediate-finish t))
-    )
+  (defun my/consult-org-agenda ()
+    (interactive)
+    (consult-org-agenda)
+    (org-tree-to-indirect-buffer))
 
-  ;; (add-to-list
-  ;;  'org-capture-templates
-  ;;  `("T" "Personal Todo /w clock-in" entry (file ,(my/org-inbox-file))
-  ;;    "* TODO [#C] %?\n%T\n%a\n" :clock-in t :clock-resume t))
+  (setq my/consult-org-files '())
+  (add-to-list 'my/consult-org-files (my/org-inbox-file) t)
+  (add-to-list 'my/consult-org-files (my/org-tasks-file) t)
+  (add-to-list 'my/consult-org-files (my/org-references-file) t)
+  (when (file-exists-p (my/org-blog-file))
+    (add-to-list 'my/consult-org-files (my/org-blog-file) t))
+  (when (file-exists-p (my/org-emacs-config-file))
+    (add-to-list 'my/consult-org-files (my/org-emacs-config-file) t))
 
-  ;; (push `("j" "journal entry" entry (file+olp+datetree ,(my/org-diary-file))
-  ;;         "* %<%H:%M> - %?\n%T\n")
-  ;;       org-capture-templates)
-  ;; (push `("J" "Journal /w clock-in" entry (file+olp+datetree ,(my/org-diary-file))
-  ;;         "* %<%H:%M> - %?\n%U\n%a\n" :clock-in t :clock-resume t :empty-lines 1)
-  ;;       org-capture-templates)
+  (defun my/consult-org-all ()
+    (interactive)
+    (consult-org-heading
+     "+LEVEL<=3"
+     my/consult-org-files))
 
-;;;; org-id-location
+  ;; (global-set-key (kbd "C-S-j") #'my/consult-org-all)
+  ;; (global-set-key (kbd "<f1>") #'my/consult-org-all)
 
-  (setq org-id-locations-file (file-name-concat org-directory (concat "." system-name "-orgids"))) ;; share
+  ;; Full text search the whole org directory
+  (defun my/consult-ripgrep-org-directory ()
+    (interactive)
+    (require 'consult)
+    ;; Add "--no-ignore-vcs" to the rg command so todo.org could be searched.
+    (let ((consult-ripgrep-args (concat consult-ripgrep-args " --no-ignore-vcs")))
+      (consult-ripgrep org-directory "")))
+
+  ;; (global-set-key (kbd "C-S-f") #'my/consult-ripgrep-org-directory)  
 
 ;;;; org-insert-heading-respect-content
 
@@ -3002,63 +2911,6 @@
     (org-link-set-parameters "http" :face `(:inherit warning :weight semibold :underline t))
     (org-link-set-parameters "info" :face `(:inherit info-file :weight semibold :underline t))
     (org-link-set-parameters "https" :face `(:inherit warning :weight semibold :underline t))
-    )
-;;;; org-cliplink
-
-  (with-eval-after-load 'org-cliplink
-    (require 'org-cliplink)
-    (setq org-cliplink-max-length 72)
-    (setq org-cliplink-ellipsis "-")
-
-    ;; from ohyecloudy
-    (defun my/org-cliplink ()
-      (interactive)
-      (org-cliplink-insert-transformed-title
-       (org-cliplink-clipboard-content)     ;take the URL from the CLIPBOARD
-       #'my-org-link-transformer))
-
-    (defun my-org-link-transformer (url title)
-      (let* ((parsed-url (url-generic-parse-url url)) ;parse the url
-             (host-url (replace-regexp-in-string "^www\\." "" (url-host parsed-url)))
-             (clean-title
-              (cond
-               ;; if the host is github.com, cleanup the title
-               ((string= (url-host parsed-url) "github.com")
-                (replace-regexp-in-string "^/" ""
-                                          (car (url-path-and-query parsed-url))))
-               ;; otherwise keep the original title
-               (t (my-org-cliplink--cleansing-site-title title))))
-             (title-with-url (format "%s - %s" clean-title host-url)))
-        ;; forward the title to the default org-cliplink transformer
-        (org-cliplink-org-mode-link-transformer url title-with-url)))
-
-    (defun my-org-cliplink--cleansing-site-title (title)
-      (let ((result title)
-            (target-site-titles '(" - 위키백과"
-                                  " - Wikipedia"
-                                  " - PUBLY"
-                                  " - YES24"
-                                  "알라딘: "
-                                  " : 클리앙"
-                                  " - YouTube")))
-        (dolist (elem target-site-titles)
-          (if (string-match elem result)
-              (setq result (string-replace elem "" result))
-            result))
-        result))
-
-    ;; 마지막에 host 를 붙이고 싶어서 link transformer 함수를 짰다. =title -
-    ;; ohyecloudy.com= 식으로 org link 를 만든다.
-    (define-key org-mode-map [remap org-cliplink] 'my/org-cliplink)
-    )
-
-;;;; org-elfeed
-
-  (with-eval-after-load 'elfeed
-    (setq rmh-elfeed-org-files (concat user-org-directory "elfeed.org"))
-    (setq elfeed-search-filter "@6-months-ago") ;;  "@1-month-ago +unread"
-    (setq elfeed-search-title-max-width 80) ; default 70
-    (add-hook 'elfeed-search-mode-hook #'elfeed-update)
     )
 ;;;; END
   )
@@ -3132,5 +2984,6 @@
 (+my/open-workspaces)
 
 (load-theme 'modus-operandi :no-confirm)
+
 
 ;;; init.el ends here
