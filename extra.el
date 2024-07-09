@@ -176,8 +176,8 @@
   :ensure t
   :after org
   :config
-  ;; (setq org-hugo-base-dir (file-truename "~/git/blog/"))
-  (setq org-hugo-base-dir "~/git/blog/")
+  ;; (setq org-hugo-base-dir (file-truename blog-admin-dir))
+  (setq org-hugo-base-dir blog-admin-dir)
 
   ;; (setq org-hugo-auto-set-lastmod t
   ;;       org-hugo-suppress-lastmod-period 43200.0)
