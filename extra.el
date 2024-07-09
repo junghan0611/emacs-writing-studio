@@ -244,18 +244,17 @@
              nerd-icons-ipsicon
              nerd-icons-pomicon
              nerd-icons-powerline))
-
 (use-package nerd-icons-dired)
 (use-package nerd-icons-completion)
+
 (use-package nerd-icons-corfu
   :after corfu
   :if window-system
   :config
-  (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
-
-(when (display-graphic-p) ; gui
+  (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)
   (add-hook 'dired-mode-hook 'nerd-icons-dired-mode)
-  (nerd-icons-completion-mode))
+  (nerd-icons-completion-mode)
+  )
 
 ;;; shackle
 
@@ -398,15 +397,6 @@
     )
 
   (tab-bar-history-mode +1)
-  )
-
-;;; context-menu
-
-(when (display-graphic-p) ;; gui
-  (pixel-scroll-precision-mode 1) ;; default nil
-
-  ;; 1) 기본 메뉴를 이용해 본다.
-  (context-menu-mode 1)
   )
 
 ;;; extra.el ends here
