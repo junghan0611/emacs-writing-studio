@@ -123,22 +123,22 @@
 
 ;; Spacious padding
 
-(use-package spacious-padding
-  :if window-system
-  :custom
-  (line-spacing 3)
-  :hook (server-after-make-frame . spacious-padding-mode)
-  :init
-  (setq spacious-padding-widths
-        '(:internal-border-width 15 ; 15
-                                 :header-line-width 4
-                                 :mode-line-width 4 ; 6
-                                 :tab-width 4
-                                 :right-divider-width 15 ; 30
-                                 :scroll-bar-width 8
-                                 :fringe-width 10)) ; 8
-  :config
-  (spacious-padding-mode 1))
+;; (use-package spacious-padding
+;;   :if window-system
+;;   :custom
+;;   (line-spacing 3)
+;;   :hook (server-after-make-frame . spacious-padding-mode)
+;;   :init
+;;   (setq spacious-padding-widths
+;;         '(:internal-border-width 15 ; 15
+;;                                  :header-line-width 4
+;;                                  :mode-line-width 4 ; 6
+;;                                  :tab-width 4
+;;                                  :right-divider-width 15 ; 30
+;;                                  :scroll-bar-width 8
+;;                                  :fringe-width 10)) ; 8
+;;   :config
+;;   (spacious-padding-mode 1))
 
 ;; Modus Themes
 
@@ -2975,8 +2975,9 @@
 ;;; Easy Context
 
 (when (display-graphic-p) ;; gui
+  (set-fringe-mode 10) ;; Give some breathing room
 
-  (pixel-scroll-precision-mode 1) ;; default nil
+  ;; (pixel-scroll-precision-mode 1) ;; default nil
   (menu-bar-mode 1)
 
   ;; (context-menu-mode 1)
