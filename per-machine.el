@@ -48,19 +48,19 @@
 
 ;;; Directory Path
 
-;; (cond
-;;  ((eq system-type 'windows-nt)
-;;   (defconst user-org-directory "~/sync/winmacs/org/")
-;;   )
-;;  ;; ((eq system-type 'darwin) )
-;;  ((eq system-type 'gnu/linux)
-;;   (defconst user-org-directory (if (getenv "ORG_DIRECTORY")
-;;                                    (getenv "ORG_DIRECTORY")
-;;                                  "~/org/"))
-;;   ))
+(cond
+ ((eq system-type 'windows-nt)
+  (defconst user-org-directory "~/sync/winmacs/org/")
+  )
+ ;; ((eq system-type 'darwin) )
+ ((eq system-type 'gnu/linux)
+  (defconst user-org-directory (if (getenv "ORG_DIRECTORY")
+                                   (getenv "ORG_DIRECTORY")
+                                 "~/org/"))
+  ))
 
 ;; for android linux windows 
-(defconst user-org-directory "~/sync/winmacs/org/")
+;; (defconst user-org-directory "~/sync/winmacs/org/")
 
 (defconst user-project-directory (if (getenv "PROJECT_DIRECTORY")
                                      (getenv "PROJECT_DIRECTORY")

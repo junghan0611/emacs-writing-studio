@@ -1940,7 +1940,7 @@
 
 ;;;; use-package
 
-(use-package denote-sections)
+;; (use-package denote-sections)
 (use-package org-pomodoro)
 (use-package org-cliplink)
 ;; (use-package org-download)
@@ -2401,7 +2401,7 @@
   ;; Reduce org-indent-indentation-per-level from 2 to 1.
   ;; This keeps =org-tags-column= the same for all headings.
   ;; Avoid inconsistency when eidting outside Emacs, like Orgzly and Beorg.
-  (setq org-indent-indentation-per-level 1) ; 2024-06-19 enable, 2024-06-27 turn-off
+  ;; (setq org-indent-indentation-per-level 1) ; 2024-06-19 enable, 2024-06-27 turn-off
 
 ;;;; defer-font-lock
 
@@ -2919,13 +2919,6 @@
     (org-link-set-parameters "info" :face `(:inherit info-file :weight semibold :underline t))
     (org-link-set-parameters "https" :face `(:inherit warning :weight semibold :underline t))
     )
-;;;; dd  
-
-  ;; (setq org-id-locations-file (file-name-concat org-directory (concat "." system-name "-orgids"))) ;; share
-  ;; (org-node-cache-mode -1)
-  ;; (org-node-cache-mode t)
-
-
 ;;;; END
   )
 
@@ -3004,5 +2997,137 @@
 (+my/open-workspaces)
 
 (load-theme 'modus-operandi :no-confirm)
+
+;;; DONT org-node
+
+;; (add-to-list 'load-path "~/emacs/git/junghan0611/org-node")
+;; (require 'org-node)
+;; (setq org-node-extra-id-dirs '(
+;;                                "~/sync/org"
+;;                                ;; "~/sync/org/notes"
+;;                                "~/sync/winmacs/org")) ;; ... assuming that's your org-roam-directory
+
+;;; zk: zk-index zk-desktop
+
+(use-package zk
+  :demand t
+  :commands (zk-org-try-to-follow-link)
+  :custom
+  (zk-file-extension "org")
+  (zk-tag-regexp "\\s#[a-zA-Z0-9]\\+") ; default
+  (zk-new-note-header-function #'gr/zk-new-note-header)
+  (zk-tag-insert-function 'gr/zk-insert-tag)
+  (zk-current-notes-function nil)
+
+  (zk-link-and-title 'ask)
+  (zk-new-note-link-insert 'ask)
+  (zk-enable-link-buttons nil)
+  :custom-face
+  (zk-desktop-button ((t (:background "gray85" :height .9))))
+  :config
+  (setq zk-directory-recursive nil)
+  (setq zk-index-auto-scroll t) ; default t
+  (setq zk-directory (concat org-directory "notes"))
+
+  (setq zk-file-extension "org")
+
+  ;; "\\temp|\\data|\\daily|\\configs|\\reveal-root|\\.attach|\\
+  (setq zk-directory-recursive-ignore-dir-regexp "\\(?:\\.\\|\\.\\.\\)$")
+
+  (defun gr/zk-new-note-header (title new-id &optional orig-id)
+    "Insert header in new notes with args TITLE and NEW-ID.
+Optionally use ORIG-ID for backlink."
+    (insert (format ":PROPERTIES:\n:ID: %s\n:END:\n#+title: %s\n#+date: %s\n#+filetags: :zk:\n#+identifier: %s\n#+description:\n\n===\n#+tags: \n" new-id title (format-time-string "[%Y-%m-%d %a %H:%M]") new-id))
+
+    (when (ignore-errors (zk--parse-id 'title orig-id)) ;; check for file
+      (progn
+        (insert "===\n<- ")
+        (zk--insert-link-and-title orig-id (zk--parse-id 'title orig-id))
+        (newline)))
+    (insert "===\n\n\n"))
+
+  (defun gr/zk-insert-tag (tag)
+    (interactive)
+    (unless current-prefix-arg
+      (goto-char (point-min))
+      (when (re-search-forward "#\\+tags:" nil t)
+        (goto-char (match-beginning 0))
+        (end-of-line)
+        (insert " ")))
+    (insert tag))
+
+  ;; redefine own function
+  (defun zk--grep-tag-list ()
+    "Return list of tags from all notes in zk directory."
+    (delete-dups
+     (split-string
+      (string-join
+       (split-string
+        (shell-command-to-string (concat
+                                  "grep -ohir --include \\*."
+                                  zk-file-extension
+                                  " -e "
+                                  (shell-quote-argument
+                                   "+tags:.*")
+                                  (shell-quote-argument
+                                   zk-tag-regexp)
+                                  " "
+                                  zk-directory " 2>/dev/null"))
+        "\\+tags:" "\s" "\n"))
+      " ")))
+
+  ;; Denote Integration
+  (setq zk-id-time-string-format "%Y%m%dT%H%M%S")
+  (setq zk-id-regexp "\\([0-9]\\{8\\}\\)\\(T[0-9]\\{6\\}\\)")
+  (setq zk-file-name-separator "-")
+
+  ;; denote or org-roam 둘 둥에 하나로 통일
+  (setq zk-link-format "[[id:%s]]")
+  (setq zk-link-and-title-format "[[id:%i][%t]]")
+  ;; (setq zk-completion-at-point-format "%t [[denote:%i]]")
+  (setq zk-completion-at-point-format "[[%i]] %t")
+
+  (zk-setup-auto-link-buttons)
+  (zk-setup-embark)
+
+  ;; (with-eval-after-load 'consult
+  ;;   (require 'zk-consult)
+  ;;   (setq zk-search-function 'zk-consult-grep)
+  ;;   (setq zk-tag-search-function #'zk-consult-grep-tag-search)
+  ;;   (setq zk-consult-preview-functions
+  ;;         '(zk-current-notes
+  ;;           zk-consult-grep
+  ;;           zk-unlinked-notes))
+  ;;   (setq zk-select-file-function 'zk-consult-select-file)
+  ;;   (add-to-list 'consult-buffer-sources 'zk-consult-source 'append)
+
+  ;;   (consult-customize
+  ;;    zk-consult-grep
+  ;;    :preview-key '(any))
+
+  ;;   (consult-customize
+  ;;    zk-find-file zk-find-file-by-full-text-search zk-network zk-backlinks
+  ;;    ;; zk-links-in-note
+  ;;    :preview-key '("M-."))
+  ;;   )
+  )
+
+(use-package zk-index
+  :after zk
+  :config
+  (require 'zk-index)
+  (setq zk-index-cursor nil)
+  (setq zk-index-invisible-ids t)
+  (zk-index-setup-embark))
+
+(use-package zk-desktop
+  :after zk-index
+  :config
+  (setq zk-desktop-prefix "- ")
+  (setq zk-desktop-major-mode 'org-mode)
+  (setq zk-desktop-add-pos 'at-point)
+  (setq zk-desktop-directory (concat zk-directory "desktops"))
+  (zk-desktop-setup-embark)
+  )
 
 ;;; init.el ends here
