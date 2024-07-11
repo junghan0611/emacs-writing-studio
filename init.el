@@ -908,15 +908,15 @@
 (setq ews-hunspell-dictionaries "en_US") ; ko_KR
 (setq denote-directory user-org-directory)
 
-(setq ews-bibtex-directory (concat org-directory "library"))
-(setq citar-bibliography (list (concat org-directory "library/emacs-writing-studio.bib")))
+(setq ews-bibtex-directory (concat org-directory "bib"))
+(setq citar-bibliography config-bibfiles)
 
 ;; use #+cite_export: csl apa.csl
 ;; (setq org-cite-csl-styles-dir (concat user-org-directory ".csl"))
 ;; (setq citar-citeproc-csl-styles-dir (concat user-org-directory ".csl"))
 ;; (setq citar-citeproc-csl-locales-dir "~/.csl/locales")
 (setq citar-citeproc-csl-style "apa.csl") ; ieee.csl
-;; (setq citar-notes-paths (list (concat org-directory "bib/")))
+(setq citar-notes-paths (list (concat org-directory "bib/")))
 (setq org-cite-global-bibliography citar-bibliography)
 
 ;;;; Load Evil
@@ -3012,6 +3012,13 @@
 (use-package zk
   :demand t
   :commands (zk-org-try-to-follow-link)
+  :bind
+  (:map embark-region-map
+        ("N" . zk-new-note))
+  (:map zk-id-map
+        ("s" . zk-search)
+        ("z" . zk-grep) ;; zk-consult-grep does not work as embark action
+        )
   :custom
   (zk-file-extension "org")
   (zk-tag-regexp "\\s#[a-zA-Z0-9]\\+") ; default
@@ -3085,31 +3092,15 @@ Optionally use ORIG-ID for backlink."
   (setq zk-link-format "[[id:%s]]")
   (setq zk-link-and-title-format "[[id:%i][%t]]")
   ;; (setq zk-completion-at-point-format "%t [[denote:%i]]")
-  (setq zk-completion-at-point-format "[[%i]] %t")
+  (setq zk-completion-at-point-format "[[id:%i]] %t")
 
-  (zk-setup-auto-link-buttons)
+  ;; (zk-setup-auto-link-buttons)
   (zk-setup-embark)
 
-  ;; (with-eval-after-load 'consult
-  ;;   (require 'zk-consult)
-  ;;   (setq zk-search-function 'zk-consult-grep)
-  ;;   (setq zk-tag-search-function #'zk-consult-grep-tag-search)
-  ;;   (setq zk-consult-preview-functions
-  ;;         '(zk-current-notes
-  ;;           zk-consult-grep
-  ;;           zk-unlinked-notes))
-  ;;   (setq zk-select-file-function 'zk-consult-select-file)
-  ;;   (add-to-list 'consult-buffer-sources 'zk-consult-source 'append)
-
-  ;;   (consult-customize
-  ;;    zk-consult-grep
-  ;;    :preview-key '(any))
-
-  ;;   (consult-customize
-  ;;    zk-find-file zk-find-file-by-full-text-search zk-network zk-backlinks
-  ;;    ;; zk-links-in-note
-  ;;    :preview-key '("M-."))
-  ;;   )
+  (defun cape-org-mode-setup ()
+    ;; (add-to-list 'completion-at-point-functions #'cape-file)
+    (add-hook 'completion-at-point-functions #'zk-completion-at-point 'append))
+  (add-hook 'org-mode-hook 'cape-org-mode-setup)
   )
 
 (use-package zk-index
@@ -3129,5 +3120,6 @@ Optionally use ORIG-ID for backlink."
   (setq zk-desktop-directory (concat zk-directory "desktops"))
   (zk-desktop-setup-embark)
   )
+
 
 ;;; init.el ends here

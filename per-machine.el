@@ -51,12 +51,14 @@
 (cond
  ((eq system-type 'windows-nt)
   (defconst user-org-directory "~/sync/winmacs/org/")
+  (defvar config-bibfiles (list (concat user-org-directory "library/emacs-writing-studio.bib")))
   )
  ;; ((eq system-type 'darwin) )
  ((eq system-type 'gnu/linux)
   (defconst user-org-directory (if (getenv "ORG_DIRECTORY")
                                    (getenv "ORG_DIRECTORY")
                                  "~/org/"))
+  (defvar config-bibfiles (list (concat user-org-directory "bib/zotero-biblatex.bib")))
   ))
 
 ;; for android linux windows 
