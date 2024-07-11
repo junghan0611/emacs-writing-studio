@@ -317,4 +317,26 @@
   (keymap-set org-mode-map "C-x n 8" #'ews-org-insert-screenshot)
   )
 
+;;; ZK zk-index and zk-desktop
+
+(when (locate-library "zk-index")
+  (with-eval-after-load 'zk-index
+    (evil-define-key '(normal visual) zk-index-mode-map (kbd "n") #'zk-index-next-line)
+    (evil-define-key '(normal visual) zk-index-mode-map (kbd "p") #'zk-index-previous-line)
+    (evil-define-key '(normal visual) zk-index-mode-map (kbd "v") #'zk-index-view-note)
+    (evil-define-key '(normal visual) zk-index-mode-map (kbd "o") #'other-window)
+    (evil-define-key '(normal visual) zk-index-mode-map (kbd "f") #'zk-index-focus)
+    (evil-define-key '(normal visual) zk-index-mode-map (kbd "s") #'zk-index-search)
+    (evil-define-key '(normal visual) zk-index-mode-map (kbd "g") #'zk-index-query-refresh)
+    (evil-define-key '(normal visual) zk-index-mode-map (kbd "c") #'zk-index-current-notes)
+    (evil-define-key '(normal visual) zk-index-mode-map (kbd "i") #'zk-index-refresh)
+    (evil-define-key '(normal visual) zk-index-mode-map (kbd "S") #'zk-index-sort-size)
+    (evil-define-key '(normal visual) zk-index-mode-map (kbd "M") #'zk-index-sort-modified)
+    (evil-define-key '(normal visual) zk-index-mode-map (kbd "C") #'zk-index-sort-created)
+    (evil-define-key '(normal visual) zk-index-mode-map (kbd "RET") #'zk-index-open-note)
+    (evil-define-key '(normal visual) zk-index-mode-map (kbd "q") #'delete-window)
+    )
+  )
+
+
 ;;; keys.el ends here

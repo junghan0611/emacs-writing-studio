@@ -3034,7 +3034,7 @@
   :config
   (setq zk-directory-recursive nil)
   (setq zk-index-auto-scroll t) ; default t
-  (setq zk-directory (concat org-directory "notes"))
+  (setq zk-directory (concat org-directory "notes/"))
 
   (setq zk-file-extension "org")
 
@@ -3092,7 +3092,7 @@ Optionally use ORIG-ID for backlink."
   (setq zk-link-format "[[id:%s]]")
   (setq zk-link-and-title-format "[[id:%i][%t]]")
   ;; (setq zk-completion-at-point-format "%t [[denote:%i]]")
-  (setq zk-completion-at-point-format "[[id:%i]] %t")
+  (setq zk-completion-at-point-format "[[id:%i][%t]]")
 
   ;; (zk-setup-auto-link-buttons)
   (zk-setup-embark)
