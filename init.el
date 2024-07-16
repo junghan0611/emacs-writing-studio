@@ -30,7 +30,7 @@
 ;;
 ;;; Code:
 
-;; (setq debug-on-error t)
+(setq debug-on-error t)
 
 (when (eq window-system 'mac)
   (message "window-system mac"))
@@ -109,6 +109,17 @@
    ("gs" "mutool")
    ("mpg321" "ogg123" "mplayer" "mpv" "vlc")
    "git"))
+
+
+;;; Load 'Per-Machine'
+
+;; Most of my per-environment config done via =customize= and is in .custom.el.
+;; However, some config is more involved, such as packages I just want in one
+;; environment and not the others.  To that end, let's load a file that can contain
+;; those customizations.
+(let ((per-machine-filename (concat user-emacs-directory "per-machine.el")))
+  (when (file-exists-p per-machine-filename)
+    (load-file per-machine-filename)))
 
 ;;; LOOK AND FEEL
 ;; Keyboard-centric user interface removing tool, menu and scroll bars
@@ -346,10 +357,10 @@
   :custom
   (org-startup-indented t)
   (org-hide-emphasis-markers t)
-  (org-startup-with-inline-images t)
+  (org-startup-with-inline-images nil) ; fix
   (org-image-actual-width '(450))
   (org-fold-catch-invisible-edits 'error)
-  (org-startup-with-latex-preview t)
+  (org-startup-with-latex-preview nil) ; fix
   (org-pretty-entities t)
   (org-use-sub-superscripts "{}")
   (org-id-link-to-org-use-id t))
@@ -533,18 +544,67 @@
 	 (file+headline org-default-notes-file "Tasks")
 	 "* TODO %i%?")))
 
-;; Denote
+;;; Denote
+
+;; '("Inbox.org" "Schedule.org") ;; "Mesche.org" "SystemCrafters.org")
+(defvar dw/base-agenda-files
+  (list
+   (my/org-inbox-file)
+   (my/org-tasks-file)
+   ;; (my/org-diary-file)
+   ;; (my/org-life-file)
+   )
+  "The base agenda files that will always be included.")
+
+(defun dw/org-path (path)
+  (expand-file-name path org-directory))
+
+(defun dw/refresh-agenda-files ()
+  (interactive)
+  (setq org-agenda-files
+        (append (denote-directory-files "_aprj")
+                dw/base-agenda-files)))
+
+(defun dw/insert-topic-links ()
+  (interactive)
+  (let* ((topics (mapcar (lambda (file)
+                           (cons (denote-retrieve-front-matter-title-value file 'org)
+                                 (denote-retrieve-filename-identifier file)))
+                         (denote-directory-files "_kt")))
+         (selected (completing-read-multiple "Select topics: " topics nil t)))
+    (insert (string-join (mapcar (lambda (topic)
+                                   (format "[[denote:%s][%s]]"
+                                           (alist-get topic
+                                                      topics
+                                                      nil
+                                                      nil
+                                                      #'string=)
+                                           topic))
+                                 selected)
+                         " "))))
 
 (use-package denote
-  :defer t
   :custom
   (denote-sort-keywords t)
+  (denote-rename-buffer-format "Denote: %t (%k)")
+  (denote-infer-keywords nil)
+  (denote-known-keywords
+   '("aprj" "bprj" "cprj"
+     "ply" "plm" "plw"
+     "kt" "ke" "kp" "kl" "ka" "kap"
+     "kcp" "kca" "kcc"
+     "kra" "krb" "krv"
+     "rn"))
   :hook
   (dired-mode . denote-dired-mode)
-  :custom-face
-  (denote-faces-link ((t (:slant italic))))
+  ;; :custom-face
+  ;; (denote-faces-link ((t (:slant italic))))
   :init
   (require 'denote-org-extras)
+  (require 'denote-silo-extras)
+  ;; (require 'denote-journal-extras)
+  (require 'denote-rename-buffer)
+  (require 'denote-sort)
   :bind
   (("C-c w d b" . denote-find-backlink)
    ("C-c w d d" . denote-date)
@@ -557,7 +617,27 @@
    ("C-c w d l" . denote-link-find-file)
    ("C-c w d n" . denote)
    ("C-c w d r" . denote-rename-file)
-   ("C-c w d R" . denote-rename-file-using-front-matter)))
+   ("C-c w d R" . denote-rename-file-using-front-matter))
+  :config
+  ;; Refresh agenda files the first time
+  (dw/refresh-agenda-files)
+
+  ;; (setq denote-link--prepare-links-format "- %s\n")
+
+  (setq denote-directory user-org-directory)
+  (setq denote-dired-directories denote-directory)
+
+  (setq denote-dired-directories-include-subdirectories t
+        denote-save-buffers t)
+
+  ;; Rename buffers with the note name
+  (denote-rename-buffer-mode 1)
+
+  ;; Update agenda files after notes are created or renamed
+  ;; (add-hook 'denote-after-rename-file-hook #'dw/refresh-agenda-files)
+  ;; (add-hook 'denote-after-new-note-hook #'dw/refresh-agenda-files)
+  ;; (add-hook 'text-mode-hook #'denote-fontify-links-mode-maybe)
+  )
 
 ;; Consult-Denote for easy access
 
@@ -893,21 +973,9 @@
   (setq pgtk-use-im-context-on-new-connection nil))
 
 
-;;;; Load 'Per-Machine'
-
-;; Most of my per-environment config done via =customize= and is in .custom.el.
-;; However, some config is more involved, such as packages I just want in one
-;; environment and not the others.  To that end, let's load a file that can contain
-;; those customizations.
-(let ((per-machine-filename (concat user-emacs-directory "per-machine.el")))
-  (when (file-exists-p per-machine-filename)
-    (load-file per-machine-filename)))
-
 ;;;; Overide path and configs
 
 (setq ews-hunspell-dictionaries "en_US") ; ko_KR
-(setq denote-directory user-org-directory)
-
 (setq ews-bibtex-directory (concat org-directory "bib"))
 (setq citar-bibliography config-bibfiles)
 
@@ -1726,10 +1794,10 @@
 ;;;; Load Extra files
 
 ;; (load-file (concat (file-name-as-directory user-emacs-directory) "meow.el"))
+
 (load-file (concat (file-name-as-directory user-emacs-directory) "extra.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "core-funcs.el"))
 (load-file (concat (file-name-as-directory user-emacs-directory) "org-funcs.el"))
-
 
 ;;;; formatter - apheleia
 
@@ -1936,7 +2004,7 @@
 ;;     )
 ;;   )
 
-;;; Notetaking
+;;; Org-mode
 
 ;;;; use-package
 
@@ -2856,7 +2924,7 @@
 
   (add-to-list
    'org-capture-templates
-   `("I" "Inbox (Work)" entry (file+headline ,(my/org-work-file) "Inbox")
+   `("I" "Inbox (Work)" entry (file+headline ,(my/org-inbox-file) "Inbox")
      "* %?\n%i\n%a"))
 
   ;; (add-to-list
@@ -2954,16 +3022,7 @@
 
 ;;;; casual-suite
 
-(use-package casual-suite
-  :defer 1
-  :config
-  (define-key Info-mode-map (kbd "<f2>") #'casual-info-tmenu)
-  (global-set-key (kbd "M-g v") 'casual-avy-tmenu)
-  (define-key dired-mode-map (kbd "<f2>") #'casual-dired-tmenu)
-  (define-key calc-mode-map (kbd "<f2>") #'casual-calc-tmenu)
-  (define-key isearch-mode-map (kbd "<f2>") #'casual-isearch-tmenu)
-  (define-key ibuffer-mode-map (kbd "<f2>") #'casual-ibuffer-tmenu)
-  )
+(use-package casual-suite :ensure t)
 
 ;;; Easy Context
 
@@ -2998,128 +3057,60 @@
 
 (load-theme 'modus-operandi :no-confirm)
 
-;;; DONT org-node
+;;; PKM
+;;;; DONT org-node
 
-;; (add-to-list 'load-path "~/emacs/git/junghan0611/org-node")
-;; (require 'org-node)
-;; (setq org-node-extra-id-dirs '(
-;;                                "~/sync/org"
-;;                                ;; "~/sync/org/notes"
-;;                                "~/sync/winmacs/org")) ;; ... assuming that's your org-roam-directory
+;; (when (eq system-type 'gnu/linux)
+;;   (add-to-list 'load-path "~/emacs/git/junghan0611/org-node")
+;;   (require 'org-node)
+;;   (setq org-node-extra-id-dirs '(
+;;                                  ;; "~/sync/org"
+;;                                  "~/sync/org/notes"
+;;                                  "~/sync/winmacs/org")) ;; ... assuming that's your org-roam-directory
+;;   )
 
-;;; zk: zk-index zk-desktop
+;;;; denote-fz
 
-(use-package zk
-  :demand t
-  :commands (zk-org-try-to-follow-link)
-  :bind
-  (:map embark-region-map
-        ("N" . zk-new-note))
-  (:map zk-id-map
-        ("s" . zk-search)
-        ("z" . zk-grep) ;; zk-consult-grep does not work as embark action
-        )
-  :custom
-  (zk-file-extension "org")
-  (zk-tag-regexp "\\s#[a-zA-Z0-9]\\+") ; default
-  (zk-new-note-header-function #'gr/zk-new-note-header)
-  (zk-tag-insert-function 'gr/zk-insert-tag)
-  (zk-current-notes-function nil)
+(unless IS-TERMUX
+  (when (eq system-type 'gnu/linux)
+    (add-to-list 'load-path "~/sync/emacs/git/junghan0611/denote-folgezettel/")
+    (require 'denote-fz)
+    (define-key denote-fz-mode-map (kbd "C-c z") denote-fz-command-map)
+    (denote-fz-mode +1)
+    ))
 
-  (zk-link-and-title 'ask)
-  (zk-new-note-link-insert 'ask)
-  (zk-enable-link-buttons nil)
-  :custom-face
-  (zk-desktop-button ((t (:background "gray85" :height .9))))
-  :config
-  (setq zk-directory-recursive nil)
-  (setq zk-index-auto-scroll t) ; default t
-  (setq zk-directory (concat org-directory "notes/"))
+;;;; dired denote link 
 
-  (setq zk-file-extension "org")
+(setq denote-file-type 'org)
 
-  ;; "\\temp|\\data|\\daily|\\configs|\\reveal-root|\\.attach|\\
-  (setq zk-directory-recursive-ignore-dir-regexp "\\(?:\\.\\|\\.\\.\\)$")
-
-  (defun gr/zk-new-note-header (title new-id &optional orig-id)
-    "Insert header in new notes with args TITLE and NEW-ID.
-Optionally use ORIG-ID for backlink."
-    (insert (format ":PROPERTIES:\n:ID: %s\n:END:\n#+title: %s\n#+date: %s\n#+filetags: :zk:\n#+identifier: %s\n#+description:\n\n===\n#+tags: \n" new-id title (format-time-string "[%Y-%m-%d %a %H:%M]") new-id))
-
-    (when (ignore-errors (zk--parse-id 'title orig-id)) ;; check for file
-      (progn
-        (insert "===\n<- ")
-        (zk--insert-link-and-title orig-id (zk--parse-id 'title orig-id))
-        (newline)))
-    (insert "===\n\n\n"))
-
-  (defun gr/zk-insert-tag (tag)
-    (interactive)
-    (unless current-prefix-arg
-      (goto-char (point-min))
-      (when (re-search-forward "#\\+tags:" nil t)
-        (goto-char (match-beginning 0))
-        (end-of-line)
-        (insert " ")))
-    (insert tag))
-
-  ;; redefine own function
-  (defun zk--grep-tag-list ()
-    "Return list of tags from all notes in zk directory."
-    (delete-dups
-     (split-string
-      (string-join
-       (split-string
-        (shell-command-to-string (concat
-                                  "grep -ohir --include \\*."
-                                  zk-file-extension
-                                  " -e "
-                                  (shell-quote-argument
-                                   "+tags:.*")
-                                  (shell-quote-argument
-                                   zk-tag-regexp)
-                                  " "
-                                  zk-directory " 2>/dev/null"))
-        "\\+tags:" "\s" "\n"))
-      " ")))
-
-  ;; Denote Integration
-  (setq zk-id-time-string-format "%Y%m%dT%H%M%S")
-  (setq zk-id-regexp "\\([0-9]\\{8\\}\\)\\(T[0-9]\\{6\\}\\)")
-  (setq zk-file-name-separator "-")
-
-  ;; denote or org-roam 둘 둥에 하나로 통일
-  (setq zk-link-format "[[id:%s]]")
-  (setq zk-link-and-title-format "[[id:%i][%t]]")
-  ;; (setq zk-completion-at-point-format "%t [[denote:%i]]")
-  (setq zk-completion-at-point-format "[[id:%i][%t]]")
-
-  ;; (zk-setup-auto-link-buttons)
-  (zk-setup-embark)
-
-  (defun cape-org-mode-setup ()
-    ;; (add-to-list 'completion-at-point-functions #'cape-file)
-    (add-hook 'completion-at-point-functions #'zk-completion-at-point 'append))
-  (add-hook 'org-mode-hook 'cape-org-mode-setup)
-  )
-
-(use-package zk-index
-  :after zk
-  :config
-  (require 'zk-index)
-  (setq zk-index-cursor nil)
-  (setq zk-index-invisible-ids t)
-  (zk-index-setup-embark))
-
-(use-package zk-desktop
-  :after zk-index
-  :config
-  (setq zk-desktop-prefix "- ")
-  (setq zk-desktop-major-mode 'org-mode)
-  (setq zk-desktop-add-pos 'at-point)
-  (setq zk-desktop-directory (concat zk-directory "desktops"))
-  (zk-desktop-setup-embark)
-  )
-
+(defun my/denote-link-dired-marked-notes (files buffer &optional ID-ONLY)
+  (interactive
+   (list
+    (denote-link--map-over-notes)
+    (let ((file-names (denote--buffer-file-names)))
+      (find-file
+       (cond
+        ((null file-names)
+         (user-error "No buffers visiting Denote notes"))
+        ((eq (length file-names) 1)
+         (car file-names))
+        (t
+         (denote-link--buffer-prompt file-names)))))
+    current-prefix-arg)
+   dired-mode)
+  (when (null files)
+    (user-error "No note files to link to"))
+  (with-current-buffer buffer
+    (unless (or (denote--file-type-org-extra-p)
+                (and buffer-file-name (denote-file-has-supported-extension-p buffer-file-name)))
+      (user-error "The buffer's file type is not recognized by Denote")))
+  (when (y-or-n-p (format "Create links at point in %s?" buffer))
+    (with-current-buffer buffer
+      ;; (message (format "Create links at point in %s?" buffer))
+      ;; (message (format "Create links at point in \n - %s?" files))
+      (insert "\n")
+      (denote-link--insert-links files denote-file-type)
+      (insert "\n")
+      )))
 
 ;;; init.el ends here

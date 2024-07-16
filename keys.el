@@ -246,7 +246,19 @@
 
 ;;; denote
 
+(when (locate-library "consult-org-roam")
+  (global-set-key (kbd "M-s M-/") #'org-roam-node-find)
+  (global-set-key (kbd "M-s n") #'org-roam-node-find)
+  (global-set-key (kbd "M-s /") #'consult-org-roam-file-find)
+  )
+
 (when (locate-library "denote")
+  (global-set-key (kbd "M-s d") #'my/goto-denote-dired)
+  (global-set-key (kbd "M-s M-f") #'my/denote-find-file)
+  )
+
+(when (locate-library "denote")
+
   (defvar-keymap ews-denote-map
     :doc "Denote keybindings."
 
@@ -317,26 +329,26 @@
   (keymap-set org-mode-map "C-x n 8" #'ews-org-insert-screenshot)
   )
 
-;;; ZK zk-index and zk-desktop
+;;; casual-suite
 
-(when (locate-library "zk-index")
-  (with-eval-after-load 'zk-index
-    (evil-define-key '(normal visual) zk-index-mode-map (kbd "n") #'zk-index-next-line)
-    (evil-define-key '(normal visual) zk-index-mode-map (kbd "p") #'zk-index-previous-line)
-    (evil-define-key '(normal visual) zk-index-mode-map (kbd "v") #'zk-index-view-note)
-    (evil-define-key '(normal visual) zk-index-mode-map (kbd "o") #'other-window)
-    (evil-define-key '(normal visual) zk-index-mode-map (kbd "f") #'zk-index-focus)
-    (evil-define-key '(normal visual) zk-index-mode-map (kbd "s") #'zk-index-search)
-    (evil-define-key '(normal visual) zk-index-mode-map (kbd "g") #'zk-index-query-refresh)
-    (evil-define-key '(normal visual) zk-index-mode-map (kbd "c") #'zk-index-current-notes)
-    (evil-define-key '(normal visual) zk-index-mode-map (kbd "i") #'zk-index-refresh)
-    (evil-define-key '(normal visual) zk-index-mode-map (kbd "S") #'zk-index-sort-size)
-    (evil-define-key '(normal visual) zk-index-mode-map (kbd "M") #'zk-index-sort-modified)
-    (evil-define-key '(normal visual) zk-index-mode-map (kbd "C") #'zk-index-sort-created)
-    (evil-define-key '(normal visual) zk-index-mode-map (kbd "RET") #'zk-index-open-note)
-    (evil-define-key '(normal visual) zk-index-mode-map (kbd "q") #'delete-window)
+(when (locate-library "casual-suite")
+  (progn
+    (require 'casual-suite)
+    (keymap-set calc-mode-map "C-;" #'casual-calc-tmenu)
+    (keymap-set dired-mode-map "C-;" #'casual-dired-tmenu)
+    (keymap-set isearch-mode-map "<f2>" #'cc-isearch-menu-transient)
+    (keymap-set ibuffer-mode-map "C-;" #'casual-ibuffer-tmenu)
+    ;; (keymap-set ibuffer-mode-map "F" #'casual-ibuffer-filter-tmenu)
+    ;; (keymap-set ibuffer-mode-map "s" #'casual-ibuffer-sortby-tmenu)
+
+    (keymap-set Info-mode-map "C-;" #'casual-info-tmenu)
+    (keymap-set reb-mode-map "C-;" #'casual-re-builder-tmenu)
+    (keymap-set reb-lisp-mode-map "C-;" #'casual-re-builder-tmenu)
+
+; 'M-a' backward-sentence -> '(' evil-backward-sentence-begin
+    (keymap-global-set "M-a" #'casual-avy-tmenu)
+    ;; M-e
     )
   )
-
 
 ;;; keys.el ends here
