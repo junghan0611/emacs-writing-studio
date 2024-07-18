@@ -634,9 +634,9 @@
   (denote-rename-buffer-mode 1)
 
   ;; Update agenda files after notes are created or renamed
-  ;; (add-hook 'denote-after-rename-file-hook #'dw/refresh-agenda-files)
-  ;; (add-hook 'denote-after-new-note-hook #'dw/refresh-agenda-files)
-  ;; (add-hook 'text-mode-hook #'denote-fontify-links-mode-maybe)
+  (add-hook 'denote-after-rename-file-hook #'dw/refresh-agenda-files)
+  (add-hook 'denote-after-new-note-hook #'dw/refresh-agenda-files)
+  (add-hook 'text-mode-hook #'denote-fontify-links-mode-maybe)
   )
 
 ;; Consult-Denote for easy access

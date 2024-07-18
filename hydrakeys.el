@@ -401,16 +401,16 @@
 
 ;;;; Hydra-All > hydra-bm
 
-(pretty-hydra-define hydra-bm ()
-  ("Misc"
-   (("n" bm-next "bm-next")
-    ("p" bm-previous "bm-previous")
-    ("t" bm-toggle "bm-toggle")
-    ("q" nil "Quit" :color red :exit t))
-   "Show"
-   (("s" bm-show "bm-show" :exit t)
-    ("S" bm-show-all "bm-show-all" :exit t)
-    )))
+;; (pretty-hydra-define hydra-bm ()
+;;   ("Misc"
+;;    (("n" bm-next "bm-next")
+;;     ("p" bm-previous "bm-previous")
+;;     ("t" bm-toggle "bm-toggle")
+;;     ("q" nil "Quit" :color red :exit t))
+;;    "Show"
+;;    (("s" bm-show "bm-show" :exit t)
+;;     ("S" bm-show-all "bm-show-all" :exit t)
+;;     )))
 
 ;;;; Hydra-All > Key 'F1' or 's-s'
 

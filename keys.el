@@ -28,7 +28,7 @@
 (global-set-key (kbd "s-s") 'hydra-all/body)
 (global-set-key (kbd "M-g 1") 'hydra-jump-to-directory/body)
 (global-set-key (kbd "M-g 2") 'hydra-jump-to-files/body)
-(global-set-key (kbd "M-g b") 'hydra-bm/body)
+;; (global-set-key (kbd "M-g b") 'hydra-bm/body)
 
 (global-set-key (kbd "M-c") 'major-mode-hydra)
 (global-set-key (kbd "<f2>") 'major-mode-hydra)
@@ -239,7 +239,7 @@
 ;; C-c C-e ; +vertico/embark-export-write
 
 (global-set-key (kbd "M-o") 'embark-act) ;; spacemacs bindings
-(global-set-key (kbd "C-;") 'embark-dwim) ;; good alternative: M-.
+(global-set-key (kbd "M-O") 'embark-dwim) ;; good alternative: M-.
 
 (global-set-key (kbd "C-h B") 'embark-bindings) ;; alternative for `describe-bindings'
 
