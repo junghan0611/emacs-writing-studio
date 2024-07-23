@@ -1006,19 +1006,19 @@
 (setq create-lockfiles nil)
 
 ;; Ridiculous path view is vanilla emacs. change truename!
-;; truename À» ¿øÇÏÁö ¾Ê´Â´Ù. ½Éº¼¸µ¸µÅ©´ë·Î ¾²°í ½Í´Ù. nil ·Î »ç¿ëÇÑ´Ù.
+;; truename ì„ ì›í•˜ì§€ ì•ŠëŠ”ë‹¤. ì‹¬ë³¼ë§ë§í¬ëŒ€ë¡œ ì“°ê³  ì‹¶ë‹¤. nil ë¡œ ì‚¬ìš©í•œë‹¤.
 (setq find-file-visit-truename t)
 
 ;; Show recursion depth in minibuffer (see `enable-recursive-minibuffers')
 (minibuffer-depth-indicate-mode 1) ;; default nil
 
-;; Shr group: Simple HTML Renderer ¸¦ ÀÇ¹ÌÇÑ´Ù. ¿©±â ¼³Á¤À» ¹Ù²Ù¸é faces ¸¦ ¼öÁ¤ÇÒ ¼ö ÀÖÀ½
+;; Shr group: Simple HTML Renderer ë¥¼ ì˜ë¯¸í•œë‹¤. ì—¬ê¸° ì„¤ì •ì„ ë°”ê¾¸ë©´ faces ë¥¼ ìˆ˜ì •í•  ìˆ˜ ìˆìŒ
 (setq shr-use-fonts nil)
 
 ;; http://yummymelon.com/devnull/surprise-and-emacs-defaults.html
-;;ÅØ½ºÆ®¸¦ ¼±ÅÃÇÑ ´ÙÀ½ ±× À§¿¡ ÀÔ·ÂÇÏ¸é ÇØ´ç ÅØ½ºÆ®°¡ »èÁ¦µÇ¾î¾ß ÇÕ´Ï´Ù.
-;;³î¶ø°Ôµµ ±âº» Emac ¿¡¼­´Â ÀÌ µ¿ÀÛÀÌ ±âº»ÀûÀ¸·Î Á¦°øµÇÁö ¾Ê½À´Ï´Ù. ¸í½ÃÀûÀ¸·Î
-;;È°¼ºÈ­ÇØ¾ß ÇÕ´Ï´Ù.
+;;í…ìŠ¤íŠ¸ë¥¼ ì„ íƒí•œ ë‹¤ìŒ ê·¸ ìœ„ì— ì…ë ¥í•˜ë©´ í•´ë‹¹ í…ìŠ¤íŠ¸ê°€ ì‚­ì œë˜ì–´ì•¼ í•©ë‹ˆë‹¤.
+;;ë†€ëê²Œë„ ê¸°ë³¸ Emac ì—ì„œëŠ” ì´ ë™ì‘ì´ ê¸°ë³¸ì ìœ¼ë¡œ ì œê³µë˜ì§€ ì•ŠìŠµë‹ˆë‹¤. ëª…ì‹œì ìœ¼ë¡œ
+;;í™œì„±í™”í•´ì•¼ í•©ë‹ˆë‹¤.
 (setq delete-selection-mode t) ; default nil
 ;; (setq magit-save-repository-buffers 'dontask) ; default t
 
@@ -1053,7 +1053,7 @@
  ;; 1) per major-mode config or hook
  ;; 2) editorconfig
  ;; 3) tab-width 4 (below)
- ;; tab-width 4 ;; 2024-03-11 org-mode element-cache »ç¿ë ½Ã ¹«Á¶°Ç 8ÀÌ´Ù. Ãæµ¹³­´Ù. ²ö´Ù.
+ ;; tab-width 4 ;; 2024-03-11 org-mode element-cache ì‚¬ìš© ì‹œ ë¬´ì¡°ê±´ 8ì´ë‹¤. ì¶©ëŒë‚œë‹¤. ëˆë‹¤.
 
  display-line-numbers-width-start t ; 2024-06-26
  )
@@ -1237,7 +1237,7 @@
              (format "Act on %s '%s'%s"
                      (plist-get (car targets) :type)
                      (embark--truncate-target (plist-get (car targets) :target))
-                     (if (cdr targets) "¡¦" "")))
+                     (if (cdr targets) "â€¦" "")))
            (if prefix
                (pcase (lookup-key keymap prefix 'accept-default)
                  ((and (pred keymapp) km) km)
@@ -1635,21 +1635,21 @@
 ;;;; paren and pair
 ;;;;; show-paren-mode/electric-pair-mode and customize for org-mode
 
-;; 2023-11-10 puni + electric-pair »ç¿ë Áß. ÀÌ°É ²¨¾ß org-block ¿¡¼­ ¹®Á¦°¡ ¾ø´Ù.
-;; 2023-09-28 ¾Æ´Ï´Ù. ÄÑ ³õÀº ÀÌÀ¯°¡ ÀÖÀ» °Í. elctric-pair °¡ ¾Æ´ÏÁö ¾Ê´Â°¡?
-;; ½ºÆäÀÌ½º¸Æ½º¿¡¼­ ¿Ö ÀÌ°É ÄÑ ³õ´Â °ÍÀÎ°¡?! ÀÏ´Ü ²ö´Ù.
-;; C-j ´©¸£¸é electric-newline-and-maybe-indent ¼öÇà. indent °¡ ¾È¸Â´Â´Ù. ÇÊ¿ä ¾ø´Ù.
-;; (electric-indent-mode -1) ; important!! ÀÌ·¸°Ô µû·Î ²¨¾ß ÇÑ´Ù.
+;; 2023-11-10 puni + electric-pair ì‚¬ìš© ì¤‘. ì´ê±¸ êº¼ì•¼ org-block ì—ì„œ ë¬¸ì œê°€ ì—†ë‹¤.
+;; 2023-09-28 ì•„ë‹ˆë‹¤. ì¼œ ë†“ì€ ì´ìœ ê°€ ìˆì„ ê²ƒ. elctric-pair ê°€ ì•„ë‹ˆì§€ ì•ŠëŠ”ê°€?
+;; ìŠ¤í˜ì´ìŠ¤ë§¥ìŠ¤ì—ì„œ ì™œ ì´ê±¸ ì¼œ ë†“ëŠ” ê²ƒì¸ê°€?! ì¼ë‹¨ ëˆë‹¤.
+;; C-j ëˆ„ë¥´ë©´ electric-newline-and-maybe-indent ìˆ˜í–‰. indent ê°€ ì•ˆë§ëŠ”ë‹¤. í•„ìš” ì—†ë‹¤.
+;; (electric-indent-mode -1) ; important!! ì´ë ‡ê²Œ ë”°ë¡œ êº¼ì•¼ í•œë‹¤.
 
 ;; https://github.com/alphapapa/smart-tab-over
 ;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Matching.html
-;; °ıÈ£¸¸ °­Á¶
+;; ê´„í˜¸ë§Œ ê°•ì¡°
 (setq show-paren-style 'parenthesis) ; default 'parenthesis
-;; °ıÈ£ ÀÔ·Â ÈÄ ³»¿ë ÀÔ·Â½Ã °ıÈ£¸¦ °­Á¶
+;; ê´„í˜¸ ì…ë ¥ í›„ ë‚´ìš© ì…ë ¥ì‹œ ê´„í˜¸ë¥¼ ê°•ì¡°
 (setq show-paren-when-point-inside-paren t)
 ;; (setq show-paren-when-point-in-periphery t)
 
-;; °ıÈ£ °­Á¶¸¦ Áï½Ã º¸¿©ÁØ´Ù
+;; ê´„í˜¸ ê°•ì¡°ë¥¼ ì¦‰ì‹œ ë³´ì—¬ì¤€ë‹¤
 (use-package paren
   :ensure nil
   :hook (prog-mode . +show-paren-mode)
@@ -1662,7 +1662,7 @@
     (unless show-paren-mode (show-paren-mode))))
 
 ;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Matching.html
-;; °ıÈ£, ±¸ºĞÀÚ(delimiter) ÀÚµ¿ ½Ö ¸ÂÃß±â
+;; ê´„í˜¸, êµ¬ë¶„ì(delimiter) ìë™ ìŒ ë§ì¶”ê¸°
 (setq electric-pair-pairs '((?\{ . ?\})
                             (?\( . ?\))
                             (?\[ . ?\])
@@ -1704,7 +1704,7 @@
   		 (looking-back "==" 2))
   	     (forward-char))
   	    (t (forward-char 0))))))
-;; Àı´ë ÇÏÁö ¸»°Í! (global-set-key [remap indent-for-tab-command] #'jump-out-of-pair)
+;; ì ˆëŒ€ í•˜ì§€ ë§ê²ƒ! (global-set-key [remap indent-for-tab-command] #'jump-out-of-pair)
 
 ;;;###autoload
 (defun jump-backward-pair ()
@@ -1729,7 +1729,7 @@
 
   (dolist (input '(self-insert-command
                    org-self-insert-command))
-    (add-to-list 'keycast-substitute-alist `(,input "." "Typing¡¦")))
+    (add-to-list 'keycast-substitute-alist `(,input "." "Typingâ€¦")))
   (dolist (event '(mouse-event-p
                    mouse-movement-p
                    mwheel-scroll
@@ -2076,12 +2076,12 @@
 
   (defun my-org-cliplink--cleansing-site-title (title)
     (let ((result title)
-          (target-site-titles '(" - À§Å°¹é°ú"
+          (target-site-titles '(" - ìœ„í‚¤ë°±ê³¼"
                                 " - Wikipedia"
                                 " - PUBLY"
                                 " - YES24"
-                                "¾Ë¶óµò: "
-                                " : Å¬¸®¾Ó"
+                                "ì•Œë¼ë”˜: "
+                                " : í´ë¦¬ì•™"
                                 " - YouTube")))
       (dolist (elem target-site-titles)
         (if (string-match elem result)
@@ -2089,8 +2089,8 @@
           result))
       result))
 
-  ;; ¸¶Áö¸·¿¡ host ¸¦ ºÙÀÌ°í ½Í¾î¼­ link transformer ÇÔ¼ö¸¦ Â®´Ù. =title -
-  ;; ohyecloudy.com= ½ÄÀ¸·Î org link ¸¦ ¸¸µç´Ù.
+  ;; ë§ˆì§€ë§‰ì— host ë¥¼ ë¶™ì´ê³  ì‹¶ì–´ì„œ link transformer í•¨ìˆ˜ë¥¼ ì§°ë‹¤. =title -
+  ;; ohyecloudy.com= ì‹ìœ¼ë¡œ org link ë¥¼ ë§Œë“ ë‹¤.
   (define-key org-mode-map [remap org-cliplink] 'my/org-cliplink)
   )
 
@@ -2120,7 +2120,7 @@
 
   (setq org-insert-heading-respect-content nil)
 
-  ;; ¸®¹ö½º ¼ø¼­°¡ ÀÍ¼÷ÇÏ´Ù.
+  ;; ë¦¬ë²„ìŠ¤ ìˆœì„œê°€ ìµìˆ™í•˜ë‹¤.
   (setq org-reverse-note-order t) ; default nil
 
   (setq org-show-following-heading t)
@@ -2130,7 +2130,7 @@
   (setq org-special-ctrl-k nil) ; doom nil
   (setq org-yank-adjusted-subtrees t)
 
-  ;; 22/10/11--22:18 :: headline ¼³Á¤ ÁÁ´Ù.
+  ;; 22/10/11--22:18 :: headline ì„¤ì • ì¢‹ë‹¤.
   ;; (setq org-fontify-todo-headline nil) ; default nil
   ;; (setq org-fontify-done-headline nil) ; doom t
   (setq org-fontify-whole-heading-line nil) ; doom t
@@ -2168,6 +2168,16 @@
   (setq org-time-clocksum-format
         '(:hours "%d" :require-hours t :minutes ":%02d" :require-minutes t))
 
+  (cond ((eq system-type 'windows-nt)
+         ;; Windows-specific code goes here.
+         (prefer-coding-system 'utf-8-unix)
+         (setq coding-system-for-read 'utf-8-unix)
+         (setq coding-system-for-write 'utf-8-unix)
+         )
+        ((eq system-type 'gnu/linux)
+         ;; Linux-specific code goes here. 
+         ))
+
   (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id)
 
   ;; Resume clocking task when emacs is restarted
@@ -2193,7 +2203,7 @@
   ;; Include current clocking task in clock reports
   (setq org-clock-report-include-clocking-task t)
 
-  ;; ex) 2022-09-19 (¿ù)
+  ;; ex) 2022-09-19 (ì›”)
   (setq org-agenda-format-date "%Y-%m-%d (%a)")
 
   (defun bh/make-org-scratch ()
@@ -2300,7 +2310,7 @@
 
 ;;;; shift
 
-  ;; Shift °Å½½¸®´Â °ÍÀ» ¸·¾ÆÁÖ´Â ¾ÆÁÖ ¿ä±äÇÑ ¼³Á¤ÀÌ´Ù.
+  ;; Shift ê±°ìŠ¬ë¦¬ëŠ” ê²ƒì„ ë§‰ì•„ì£¼ëŠ” ì•„ì£¼ ìš”ê¸´í•œ ì„¤ì •ì´ë‹¤.
   (setq org-treat-S-cursor-todo-selection-as-state-change nil)
   (setq org-support-shift-select nil) ; default nil
   (setq shift-select-mode nil) ; default t
@@ -2313,9 +2323,9 @@
 ;;;; imenu ellipsis bookmark
 
   ;; Search on https://www.compart.com/en/unicode/U+25BF
-  ;; Unicode Character ¡°?¡± (U+25C9)
+  ;; Unicode Character â€œâ—‰â€ (U+25C9)
   (setq org-capture-bookmark nil)
-  (setq org-ellipsis "??") ;; ?, ?, ¡å, ?,
+  (setq org-ellipsis "Â â—‰") ;; âš¡, â—‰, â–¼, â†´,
 
   ;; (setq org-imenu-depth 3) ; default 2
 
@@ -2324,12 +2334,12 @@
   (setq org-image-actual-width t)
   (setq org-image-max-width (min (/ (display-pixel-width) 3) 640))
 
-  ;; Org styling, hide markup etc. Å×½ºÆ®
-  ;; ¿Ö minemacs ´Â org-pretty ¼³Á¤À» µÑ´Ù t ·Î ÇßÀ»±î?  org-pretty-entities °¡
-  ;; ¼³Á¤µÇ¸é abc_def ¿¡¼­ def °¡ ¾Æ·¡·Î ±â¾î µé¾î°£´Ù.
+  ;; Org styling, hide markup etc. í…ŒìŠ¤íŠ¸
+  ;; ì™œ minemacs ëŠ” org-pretty ì„¤ì •ì„ ë‘˜ë‹¤ t ë¡œ í–ˆì„ê¹Œ?  org-pretty-entities ê°€
+  ;; ì„¤ì •ë˜ë©´ abc_def ì—ì„œ def ê°€ ì•„ë˜ë¡œ ê¸°ì–´ ë“¤ì–´ê°„ë‹¤.
   ;; 2023-10-13: I prefer using M-x org-toggle-pretty-entities instead.
   (setq org-pretty-entities nil) ; very important
-  ;; orgmode ÀÍ½ºÆ÷Æ® ÇÒ ¶§, underscore °¡ subscripts º¯È¯ ¹æÁö
+  ;; orgmode ìµìŠ¤í¬íŠ¸ í•  ë•Œ, underscore ê°€ subscripts ë³€í™˜ ë°©ì§€
   ;; http://ohyecloudy.com/emacsian/2019/01/12/org-export-with-sub-superscripts/
   (setq org-pretty-entities-include-sub-superscripts nil)
 
@@ -2339,10 +2349,10 @@
   ;; 2024-05-02 replaced by org-modern
   (font-lock-add-keywords 'org-mode
                           '(("^ *\\([+]\\) "
-                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "?"))))))
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "â€¢"))))))
   (font-lock-add-keywords 'org-mode
                           '(("^ *\\([-]\\) "
-                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "?"))))))
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "â—¦"))))))
 
 ;;;; org-startup-folded
 
@@ -2458,7 +2468,7 @@
   (setq org-indent-mode-turns-off-org-adapt-indentation t) ; must t, default t
 
   ;; (setq org-level-color-stars-only nil) ; doom nil
-  ;; org-indent-mode »ç¿ëÇÏ¸é org-hide-leading-stars ÀÚµ¿ on
+  ;; org-indent-mode ì‚¬ìš©í•˜ë©´ org-hide-leading-stars ìë™ on
   (setq org-hide-leading-stars nil) ; doom t
 
 ;;;; Indentation
@@ -2484,7 +2494,7 @@
 
 ;;;; org-blank-before-new-entry : heading and plain-list
 
-  ;; ¼ø¼­ ¾ø´Â ¸ñ·Ï(unordered list)¿¡¼­ bulletÀ¸·Î µé¿©¾²±â¸¦ ÇÒ ¶§¸¶´Ù +, -¸¦ ¹ø°¥¾Æ »ç¿ëÇÑ´Ù
+  ;; ìˆœì„œ ì—†ëŠ” ëª©ë¡(unordered list)ì—ì„œ bulletìœ¼ë¡œ ë“¤ì—¬ì“°ê¸°ë¥¼ í•  ë•Œë§ˆë‹¤ +, -ë¥¼ ë²ˆê°ˆì•„ ì‚¬ìš©í•œë‹¤
   (setq org-list-demote-modify-bullet '(("+" . "-") ("-" . "+")))
 
   (setq org-blank-before-new-entry
@@ -2492,7 +2502,7 @@
 
   ;; /ohyecloudy-dot-doom/doom.d/config.org
 
-  ;; =M-RET= Å°·Î ¶óÀÎÀ» ºĞ¸®ÇÒ ¼ö ÀÖ°Ô ÇÑ´Ù. org module¿¡¼­ nil °ªÀ» ¹ÙÀÎµùÇÑ °É µğÆúÆ® °ªÀ¸·Î µ¹¸².
+  ;; =M-RET= í‚¤ë¡œ ë¼ì¸ì„ ë¶„ë¦¬í•  ìˆ˜ ìˆê²Œ í•œë‹¤. org moduleì—ì„œ nil ê°’ì„ ë°”ì¸ë”©í•œ ê±¸ ë””í´íŠ¸ ê°’ìœ¼ë¡œ ëŒë¦¼.
   (setq org-M-RET-may-split-line '((default . t))) ; doom nil
 
 ;;;; org-table
@@ -2508,7 +2518,7 @@
 
 ;;;; Disable org-element-cache
 
-  ;; 2024-06-27 ¾È¾²´Â°Ô ³ªÀºµí
+  ;; 2024-06-27 ì•ˆì“°ëŠ”ê²Œ ë‚˜ì€ë“¯
 
   ;; The new org-data element provides properties from top-level property drawer,
   ;; buffer-global category, and :path property containing file path for file Org buffers.
@@ -2556,25 +2566,25 @@
     ;; (evil-define-key '(insert) org-mode-map (kbd "M-h") 'delete-backward-char)
     ;; (evil-define-key '(insert) org-mode-map (kbd "M-l") 'delete-forward-char)
 
-    ;; ordered/unordered list ¸¦ ÀÔ·Â ÇÒ ¶§ ÆíÇÔ.
-    ;; Ã¼Å©¹Ú½º°¡ ÀÖ´Â °æ¿ì M-S-RET org-insert-todo-heading À» È°¿ë.
+    ;; ordered/unordered list ë¥¼ ì…ë ¥ í•  ë•Œ í¸í•¨.
+    ;; ì²´í¬ë°•ìŠ¤ê°€ ìˆëŠ” ê²½ìš° M-S-RET org-insert-todo-heading ì„ í™œìš©.
     ;; (evil-define-key '(normal insert visual) org-mode-map (kbd "C-M-<return>") 'org-insert-item)
 
-    ;; ¹®´ÜÀ» ÇÑ ¶óÀÎÀ¸·Î ÇÕÃÄ ÁØ´Ù. ±¸±Û ¹ø¿ª±â µ¹¸± ¶§ ¸Å¿ì À¯¿ë.
+    ;; ë¬¸ë‹¨ì„ í•œ ë¼ì¸ìœ¼ë¡œ í•©ì³ ì¤€ë‹¤. êµ¬ê¸€ ë²ˆì—­ê¸° ëŒë¦´ ë•Œ ë§¤ìš° ìœ ìš©.
     ;; (evil-define-key '(normal insert visual) org-mode-map (kbd "C-M-q") 'unfill-paragraph)
 
-    ;; º¹»çÇÑ ¸µÅ©´Â ¾Æ·¡ÀÇ ¹æ¹ıÀ¸·Î ³Ö´Â´Ù. ±ò²ûÇØ¼­ ÁÁ´Ù.
-    ;; org-cliplink ´Â insert ´Ï±î i ¸¦ ¹ÙÀÎµùÇÑ´Ù. org-insert-link ¸¦ µû¸¥´Ù.
+    ;; ë³µì‚¬í•œ ë§í¬ëŠ” ì•„ë˜ì˜ ë°©ë²•ìœ¼ë¡œ ë„£ëŠ”ë‹¤. ê¹”ë”í•´ì„œ ì¢‹ë‹¤.
+    ;; org-cliplink ëŠ” insert ë‹ˆê¹Œ i ë¥¼ ë°”ì¸ë”©í•œë‹¤. org-insert-link ë¥¼ ë”°ë¥¸ë‹¤.
     (evil-define-key '(normal insert visual) org-mode-map (kbd "C-c M-i") 'org-cliplink)
     ;; (define-key map (kbd "C-c M-i") 'org-cliplink)
 
     (evil-define-key '(insert) org-mode-map (kbd "C-u") 'undo-fu-only-undo)
     (evil-define-key '(insert) org-mode-map (kbd "C-r") 'undo-fu-only-redo)
 
-    ;; flameshot À¸·Î ½ºÅ©¸°¼¦ ÇÑ µÚ, ¹Ù·Î ºÙ¿©³Ö±â
-    ;; 22/10/04--15:18 :: flameshot ÀúÀåÇÏ¸é ÀÚµ¿À¸·Î Å¬¸³º¸µå¿¡
-    ;; full-path °¡ º¹»çµÈ´Ù. imglink ½º´ÏÆêÀ» ºÎ¸£°í °æ·Î¸¦ º¹»çÇÑ´Ù.
-    ;; ½ºÅ©¸°¼¦ ¹× ÀÌ¹ÌÁö¸¦ °ü¸®ÇÏ±â¿¡ ÀÌ·¯ÇÑ ¹æ¹ıÀÌ ´õ ÁÁ´Ù.
+    ;; flameshot ìœ¼ë¡œ ìŠ¤í¬ë¦°ìƒ· í•œ ë’¤, ë°”ë¡œ ë¶™ì—¬ë„£ê¸°
+    ;; 22/10/04--15:18 :: flameshot ì €ì¥í•˜ë©´ ìë™ìœ¼ë¡œ í´ë¦½ë³´ë“œì—
+    ;; full-path ê°€ ë³µì‚¬ëœë‹¤. imglink ìŠ¤ë‹ˆí«ì„ ë¶€ë¥´ê³  ê²½ë¡œë¥¼ ë³µì‚¬í•œë‹¤.
+    ;; ìŠ¤í¬ë¦°ìƒ· ë° ì´ë¯¸ì§€ë¥¼ ê´€ë¦¬í•˜ê¸°ì— ì´ëŸ¬í•œ ë°©ë²•ì´ ë” ì¢‹ë‹¤.
     ;; (evil-define-key '(normal insert visual) org-mode-map (kbd "C-c M-y") 'org-download-clipboard)
     (define-key org-mode-map (kbd "C-c M-y") 'org-download-clipboard)
 
@@ -2687,14 +2697,14 @@
   (setq org-agenda-start-with-log-mode t)
 
   ;; Agenda log mode items to display (closed clock : default)
-  ;; ÀÌÀü ÀÌ¸Æ½º´Â state °¡ ±âº»ÀÌ¾ú´Ù. Áö±İÀº ½Ã°£ ±âÁØÀ¸·Î Ç¥±âÇÑ´Ù.
+  ;; ì´ì „ ì´ë§¥ìŠ¤ëŠ” state ê°€ ê¸°ë³¸ì´ì—ˆë‹¤. ì§€ê¸ˆì€ ì‹œê°„ ê¸°ì¤€ìœ¼ë¡œ í‘œê¸°í•œë‹¤.
   ;; closed    Show entries that have been closed on that day.
   ;; clock     Show entries that have received clocked time on that day.
   ;; state     Show all logged state changes.
   ;; (setq org-agenda-log-mode-items '(closed clock state))
   (setq org-agenda-log-mode-add-notes nil)
 
-  ;; sort °ü·Ã ±â´ÉÀ» È®ÀÎÇØº¸°í Á¤ÀÇÇÑ ÇÔ¼öµéÀÌ ÇÊ¿ä ¾øÀ¸¸é »©¸é µÈ´Ù.
+  ;; sort ê´€ë ¨ ê¸°ëŠ¥ì„ í™•ì¸í•´ë³´ê³  ì •ì˜í•œ í•¨ìˆ˜ë“¤ì´ í•„ìš” ì—†ìœ¼ë©´ ë¹¼ë©´ ëœë‹¤.
   (setq org-agenda-sort-notime-is-late t) ; Org 9.4
   (setq org-agenda-sort-noeffort-is-high t) ; Org 9.4
 
@@ -2707,7 +2717,7 @@
                                       (alert "Do you forget to clock-in?"
                                              :title "Org Clock")))))
   ;; (org-clock-auto-clockout-insinuate) ; auto-clockout
-  ;; modeline ¿¡ º¸ÀÌ´Â org clock Á¤º¸°¡ ³Ê¹« ±æ¾î¼­ ÁÙÀÓ
+  ;; modeline ì— ë³´ì´ëŠ” org clock ì •ë³´ê°€ ë„ˆë¬´ ê¸¸ì–´ì„œ ì¤„ì„
   (setq org-clock-string-limit 30) ; default 0
 
   ;; org-clock-persist for share with machines
@@ -2810,7 +2820,7 @@
 
 ;;;; link-abbrev
 
-  ;; Ãß°¡
+  ;; ì¶”ê°€
   (add-to-list 'org-link-abbrev-alist
                '("wikidata"        . "https://www.wikidata.org/wiki/"))
 
@@ -2874,13 +2884,13 @@
                           [(double-mouse-1)] 'org-agenda-goto-mouse)))
 
   (defun cc/org-agenda-goto-now ()
-    "Redo agenda view and move point to current time '¡ç now'"
+    "Redo agenda view and move point to current time 'â† now'"
     (interactive)
     (org-agenda-redo)
     (org-agenda-goto-today)
 
     (if window-system
-        (search-forward "¡ç now ¦¡")
+        (search-forward "â† now â”€")
       (search-forward "now -"))
     )
 
@@ -2902,7 +2912,7 @@
   ;; (setq org-archive-location "archives/%s_archive::")
   (setq org-archive-location (file-name-concat org-directory "archives/%s::"))
 
-  ;; nil ÀÌ¸é C-c C-o À¸·Î Á¢±ÙÇÑ´Ù.
+  ;; nil ì´ë©´ C-c C-o ìœ¼ë¡œ ì ‘ê·¼í•œë‹¤.
   ;; (setq org-mouse-1-follows-link t) ; default 450
 
 ;;;; Default Capture Templates (from Doom-Emacs)
