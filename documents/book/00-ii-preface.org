@@ -1,0 +1,38 @@
+#+title: Preface
+#+tags: URGENT(u)
+:NOTES:
+- [ ] Personal experience with productivity and Emacs
+- [ ] Who is this book for?
+- [ ] "Emacs is [[https://www.youtube.com/watch?v=XRpHIa-2XCE][Willy Wonka's chocolate factory]] for writing text"
+:END:
+
+In the good old days all a writer needed was a typewriter, a pack of smokes and a glass of whisky, if we can believe the old movies. Writing on a typewriter is a very physical process. 
+
+Computers have replaced mechanical typewriters. I was very excited when I wrote my first document on a computer. There was no more need for correction fluid 
+
+I used to hop from application to application—jumping from the action list to my schedule, onward to the word processor, spreadsheet, PDF reader, and so on. I had to manage a complex web of software tools to work on a single project. Wouldn't it be nice if there was one program that could help you with almost all your tasks?
+
+
+This book is not a manual on how to use Emacs but a guided tour through Emacs to teach you how it can help you being an author. When you install Emacs it comes fully equipped with extensive documentation. This book includes regular references to the built-in manuals to provide more detailed information.
+
+This book has been completely researched and written with Emacs. In essence this book is about how to write this book with the plain text Org mode format. 
+
+- Emacs manuals are references, so hard to imagine how you can use it
+  
+The /Emacs Writing Studio/  configuration file and the source Org mode files for this book are available in the GitHub repository on https://github.com/pprevos/emacs-writing-studio.
+
+* Acknowledgements
+A full list of acknowledgements for an free software project such as Emacs would consist of a huge list of names. Emacs can only exist because of the hundreds if not thousands of volunteers who develop and maintain the code of the core system and the many packages.
+
+My inspiration for writing this book came from the excellent work of people like Protesilaos (Prot) Stavrou, *** Wilson from System Crafters, *** and many other people who helped me flatten the learning curve of my Emacs journey.
+
+Arjan Zuidhof
+
+* Test readers
+Mastodon and Emacs users Harold Kirsch, Thomas Montfort, Ben Finney volunteered to review the book. Their feedback has helped to make this book both more easy to read and comprehensive, which is a fine balance to achieve.
+
+* YouTube channels
+- LigerLearn
+- Emacs from Scratch Series
+- Emacs Elements
+
