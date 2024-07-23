@@ -1625,9 +1625,10 @@
   :after time
   :init
   (setq celestial-mode-line-update-interval 3600) ; default 60
-  (setq celestial-mode-line-sunrise-sunset-alist '((sunrise . "??") (sunset . "??")))
+  (setq celestial-mode-line-sunrise-sunset-alist
+        '((sunrise . "🌅") (sunset . "🌄")))
   (setq celestial-mode-line-phase-representation-alist
-        '((0 . "??")(1 . "??")(2 . "??")(3 . "??")))
+        '((0 . "🌚") (1 . "🌛") (2 . "🌝") (3 . "🌜")))
   :config
   (celestial-mode-line-start-timer)
   )
