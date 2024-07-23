@@ -3174,6 +3174,7 @@
 (setq txl-deepl-api-url "http://localhost:1188/v2/translate")
 ;; (setq txl-deepl-api-key my_deepl_apikey)
 (setq txl-deepl-api-key "fd86e4d6-8227-995a-4258-b61a7ca1efcc:fx") ;; anoymous
+(setq txl-languages '(EN-US . KO))
 (global-set-key (kbd "M-g M-0") 'txl-translate-insert)
 (global-set-key (kbd "M-g 0") 'txl-translate-insert)
 
