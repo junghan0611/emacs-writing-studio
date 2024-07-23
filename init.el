@@ -3161,4 +3161,20 @@
 ;;     )
 ;;   )
 
+;;; txl
+
+;; (package! guess-language :recipe (:host github :repo "junghan0611/guess-language.el" :branch "master" :files ("*.el" "trigrams/*")))
+;; (package! txl :recipe (:host github :repo "junghan0611/txl.el" :branch "ko"))
+
+(unless (package-installed-p 'txl)
+  (package-vc-install '(txl :url "https://github.com/junghan0611/txl.el" :branch "ko")))
+
+(require 'txl)
+;; (setq txl-deepl-api-url "https://api-free.deepl.com/v2/translate") ;; free
+(setq txl-deepl-api-url "http://localhost:1188/v2/translate")
+;; (setq txl-deepl-api-key my_deepl_apikey)
+(setq txl-deepl-api-key "fd86e4d6-8227-995a-4258-b61a7ca1efcc:fx") ;; anoymous
+(global-set-key (kbd "M-g M-0") 'txl-translate-insert)
+(global-set-key (kbd "M-g 0") 'txl-translate-insert)
+
 ;;; init.el ends here
