@@ -70,7 +70,7 @@
   :custom
   (use-package-always-ensure t)
   (package-native-compile t)
-  (warning-minimum-level :emergency)
+  ;; (warning-minimum-level :emergency)
   )
 
 ;; Load EWS functions
@@ -3024,6 +3024,9 @@
 
 (use-package casual-suite :ensure t)
 
+(unless (package-installed-p 'casual-bookmarks)
+  (package-vc-install "https://github.com/kickingvegas/casual-bookmarks"))
+
 ;;; Easy Context
 
 (when (display-graphic-p) ;; gui
@@ -3033,8 +3036,8 @@
   (menu-bar-mode 1)
 
   ;; (context-menu-mode 1)
-  (load-file (concat user-dotemacs-dir "url-bookmarks.el"))
-  (require 'cc-menu-loader)
+  ;; (load-file (concat user-dotemacs-dir "url-bookmarks.el"))
+  ;; (require 'cc-menu-loader)
   )
 
 ;;; Load Workspaces & Themes
@@ -3112,5 +3115,17 @@
       (denote-link--insert-links files denote-file-type)
       (insert "\n")
       )))
+
+;;; ekg
+
+(when (eq system-type 'gnu/linux)
+  (use-package triples)
+  (use-package llm)
+  (use-package ekg
+    :ensure t
+    :after triples
+    :bind (([f11] . ekg-capture))
+    )
+  )
 
 ;;; init.el ends here
