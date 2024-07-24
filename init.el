@@ -636,6 +636,7 @@
   (add-hook 'denote-after-rename-file-hook #'dw/refresh-agenda-files)
   (add-hook 'denote-after-new-note-hook #'dw/refresh-agenda-files)
   (add-hook 'text-mode-hook #'denote-fontify-links-mode-maybe)
+
   )
 
 ;; Consult-Denote for easy access
@@ -3115,6 +3116,21 @@
     (denote-fz-mode +1)
     ))
 
+;;;; denote-slio
+
+(unless IS-TERMUX
+  (when (eq system-type 'gnu/linux)
+    (add-to-list
+     'denote-silo-extras-directories
+     (expand-file-name "~/git/jh-blogookpub/org"))
+    (add-to-list
+     'denote-silo-extras-directories
+     (expand-file-name "~/sync/markdown/books"))
+    (add-to-list
+     'denote-silo-extras-directories (expand-file-name "~/sync/winmacs/org"))
+    )
+  )
+
 ;;;; dired denote link 
 
 (setq denote-file-type 'org)
@@ -3149,15 +3165,33 @@
       (insert "\n")
       )))
 
-;;; ekg
+;;;; consult-notes for denote
 
-;; (when (eq system-type 'gnu/linux)
-;;   (use-package triples)
-;;   (use-package llm)
-;;   (use-package ekg
-;;     :ensure t
-;;     :after triples
-;;     :bind (([f11] . ekg-capture))
+(progn
+  (require 'consult-notes)
+  (setq consult-notes-denote-display-id t)
+  (setq consult-notes-denote-dir t)
+
+  (setq consult-notes-denote-title-margin 10) ; 24
+
+  (defun my/consult-notes-denote--display-keywords (keywords)
+    (format "%50s" (if keywords (concat "#" (mapconcat 'identity keywords " ")) "")))
+
+  (defun my/consult-notes-denote--display-dir (dirs)
+    (format "%20s" (concat "/" dirs)))
+
+  (setq consult-notes-denote-display-keywords-function #'my/consult-notes-denote--display-keywords)
+  (setq consult-notes-denote-display-dir-function #'my/consult-notes-denote--display-dir)
+  (consult-notes-denote-mode +1)
+  )
+
+;;; DONT ekg
+
+;; (unless IS-TERMUX
+;;   (when (eq system-type 'gnu/linux)
+;;     (use-package ekg
+;;       :bind (([f11] . ekg-capture))
+;;       )
 ;;     )
 ;;   )
 

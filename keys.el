@@ -258,23 +258,56 @@
   )
 
 (when (locate-library "denote")
+  (defvar-keymap ews-denote-explore-map
+    :doc "Denote-Explore keybindings"
+    "c" #'denote-explore-count-notes
+    "C" #'denote-explore-count-keywords
+    "S" #'denote-explore-single-keywords
+    "K" #'denote-explore-rename-keyword
+    "r" #'denote-explore-random-note
+    "l" #'denote-explore-random-link
+    "k" #'denote-explore-random-keyword
+    "w" #'denote-explore-keywords-barchart
+    "x" #'denote-explore-extensions-barchart
+    "n" #'denote-explore-network-r
+    )
+
+  (defvar-keymap ews-denote-extra-map
+    :doc "Denote-extrea keybindings"
+
+    "0" #'my/denote-info
+    "c" #'denote-explore-count-notes
+    "a" #'my/denote-attach
+    "C" #'denote-explore-count-keywords
+
+    "D" #'denote-org-dblock-insert-links
+    "e" #'prot-eshell-export
+    "M-b" 'denote-find-backlink
+
+    ;; "s" #'denote-subdirectory
+    "s" #'denote-sort-dired
+    "S" #'my/denote-sort-with-days
+    "m" #'denote-add-missing-links
+
+    ;; "z" #'denote-signature ; "zettelkasten" mnemonic
+
+    "M-i" #'denote-org-extras-dblock-insert-files
+    "-" #'my/org-create-id-by-denote-identifier
+    "M--" #'my/org-create-id-by-denote-identifier-at-once
+    )
 
   (defvar-keymap ews-denote-map
     :doc "Denote keybindings."
-
-    "0" #'my/denote-info
-    "a" #'my/denote-attach
-
     "b" #'denote-show-backlinks-buffer
-    "M-b" 'denote-find-backlink
 
     "d" #'denote-create-note
-    "D" #'denote-org-dblock-insert-links
 
-    "f" #'my/denote-find-file
+    "f" #'consult-notes
+    "F" #'my/denote-find-file
+
     "M-f" #'denote-find-link
 
-    "e" #'prot-eshell-export
+    "e" ews-denote-extra-map
 
     ;; "o" #'consult-denote-open
     "o" #'denote-silo-extras-create-note
@@ -282,34 +315,31 @@
 
     "i" #'denote-org-extras-dblock-insert-links
     "I" #'denote-org-extras-dblock-insert-backlinks
-    "M-i" #'denote-org-extras-dblock-insert-files
 
     "l" #'denote-link-or-create
     "L" #'denote-link-after-creating-with-command
 
     "n" #'my/goto-denote-dired
 
-    "m" #'denote-add-missing-links
-
     "g" #'my/denote-grep
+    "G" #'consult-notes-search-in-all-notes
+
+    "m" #'my/denote-insert-meta-links
+    "M" #'my/denote-create-meta-note
+
+    "p" #'ews-denote-assign-para
 
     "t" #'denote-type
-
     "r" #'denote-region ; "contents" mnemonic
     ;; "r" #'denote-rename-file
     ;; "R" #'denote-rename-file-using-front-matter
     "," #'denote-rename-file-using-front-matter
     "?" #'my/denote-random-note
 
-    ;; "s" #'denote-subdirectory
-    "s" #'denote-sort-dired
-    "S" #'my/denote-sort-with-days
+    "k" #'denote-rename-file-keywords
+    "z" #'denote-rename-file-signature
 
-    "k" #'denote-keywords-add
-    "K" #'denote-keywords-remove
-
-    ;; "z" #'denote-signature ; "zettelkasten" mnemonic
-    ;; "Z" #'efls/denote-signature-buffer
+    "x" ews-denote-explore-map
     )
 
   (global-set-key (kbd "C-c n") ews-denote-map)
