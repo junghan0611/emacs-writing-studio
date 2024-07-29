@@ -360,7 +360,7 @@
   (org-startup-with-inline-images nil) ; fix
   (org-image-actual-width '(450))
   (org-fold-catch-invisible-edits 'error)
-  (org-startup-with-latex-preview nil) ; fix
+  (org-startup-with-latex-preview nil)
   (org-pretty-entities t)
   (org-use-sub-superscripts "{}")
   (org-id-link-to-org-use-id t))
@@ -517,7 +517,7 @@
   :config
   (openwith-mode t)
   :custom
-  (openwith-association nil))
+  (openwith-associations nil))
 
 ;; Fleeting notes
 
@@ -681,12 +681,13 @@
   (;; Statistics
    ("C-c w x c" . denote-explore-count-notes)
    ("C-c w x C" . denote-explore-count-keywords)
-   ("C-c w x b" . denote-explore-keywords-barchart)
-   ("C-c w x x" . denote-explore-extensions-barchart)
+   ("C-c w x b" . denote-explore-barchart-keywords)
+   ("C-c w x e" . denote-explore-barchart-filetypes)
    ;; Random walks
    ("C-c w x r" . denote-explore-random-note)
    ("C-c w x l" . denote-explore-random-link)
    ("C-c w x k" . denote-explore-random-keyword)
+   ("C-c w x x" . denote-explore-random-regex)
    ;; Denote Janitor
    ("C-c w x d" . denote-explore-identify-duplicate-notes)
    ("C-c w x z" . denote-explore-zero-keywords)
@@ -753,6 +754,8 @@
   (("C-c w s r" . writegood-reading-ease))
   :hook
   (text-mode . writegood-mode))
+
+(use-package titlecase)
 
 ;; Abbreviations
 
@@ -919,9 +922,24 @@
   (bookmark-save-flag 1)
   :bind
   ("C-x r D" . bookmark-delete))
-;; (put 'upcase-region 'disabled nil)
-;; (put 'downcase-region 'disabled nil)
 
+;; Image viewer
+
+(use-package emacs
+  :bind
+  ((:map image-mode-map
+         ("k" . image-kill-buffer)
+         ("<right>" . image-next-file)
+         ("<left>"  . image-previous-file))
+   (:map dired-mode-map
+         ("C-<return>" . image-dired-dired-display-external))))
+
+(use-package image-dired
+  :bind
+  (("C-c w I" . image-dired))
+  (:map image-dired-thumbnail-mode-map
+        ("C-<right>" . image-dired-display-next)
+        ("C-<left>" . image-dired-display-previous)))
 
 ;;; USER-CONFIGURATION
 
@@ -3038,28 +3056,25 @@
 
 (use-package casual-suite :ensure t)
 
-;; (unless (package-installed-p 'casual-bookmarks)
-;;   (package-vc-install "https://github.com/kickingvegas/casual-bookmarks"))
+;;;; DONT activities
 
-;;;; activities
+;; (use-package activities
+;;   :init
+;;   (activities-mode)
+;;   (activities-tabs-mode)
+;;   ;; Prevent `edebug' default bindings from interfering.
+;;   (setq edebug-inhibit-emacs-lisp-mode-bindings t)
 
-(use-package activities
-  :init
-  (activities-mode)
-  (activities-tabs-mode)
-  ;; Prevent `edebug' default bindings from interfering.
-  (setq edebug-inhibit-emacs-lisp-mode-bindings t)
-
-  :bind
-  (("C-x C-a C-n" . activities-new)
-   ("C-x C-a C-d" . activities-define)
-   ("C-x C-a C-a" . activities-resume)
-   ("C-x C-a C-s" . activities-suspend)
-   ("C-x C-a C-k" . activities-kill)
-   ("C-x C-a RET" . activities-switch)
-   ("C-x C-a b" . activities-switch-buffer)
-   ("C-x C-a g" . activities-revert)
-   ("C-x C-a l" . activities-list)))
+;;   :bind
+;;   (("C-x C-a C-n" . activities-new)
+;;    ("C-x C-a C-d" . activities-define)
+;;    ("C-x C-a C-a" . activities-resume)
+;;    ("C-x C-a C-s" . activities-suspend)
+;;    ("C-x C-a C-k" . activities-kill)
+;;    ("C-x C-a RET" . activities-switch)
+;;    ("C-x C-a b" . activities-switch-buffer)
+;;    ("C-x C-a g" . activities-revert)
+;;    ("C-x C-a l" . activities-list)))
 
 ;;; Easy Context
 
