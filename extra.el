@@ -170,6 +170,31 @@
   (mapc #'disable-theme custom-enabled-themes))
 (advice-add #'load-theme :before #'load-theme@theme-dont-propagate)
 
+;;; jinx
+
+(use-package jinx
+  :ensure t
+  :config
+  (setq jinx-delay 0.5) ; default 0.2
+  ;; (dolist (hook '(text-mode-hook conf-mode-hook)) ; prog-mode-hook
+  ;;   (add-hook hook #'jinx-mode))
+
+  ;; 1) 영어 제외 : 한글만 검사
+  ;; 2) 한글 영어 선택하도록 제공
+  (setq jinx-languages "ko")
+  ;; (setq jinx-exclude-regexps
+  ;;       '((t "[A-Za-z]" "[']")))
+  (setq jinx-exclude-regexps
+        '((emacs-lisp-mode "Package-Requires:.*$")
+          (t "[A-Za-z]" "[']" "[A-Z]+\\>" "-+\\>" "\\w*?[0-9]\\w*\\>" "[a-z]+://\\S-+" "<?[-+_.~a-zA-Z][-+_.~:a-zA-Z0-9]*@[-.a-zA-Z0-9]+>?" "\\(?:Local Variables\\|End\\):\\s-*$" "jinx-\\(?:languages\\|local-words\\):\\s-+.*$")))
+
+  ;; C-; embark-dwim
+  ;; C-: 점 앞의 철자가 틀린 단어에 대한 수정을 트리거합니다.
+  ;; C-u M-$전체 버퍼에 대한 수정을 트리거합니다.
+  (keymap-global-set "C-:" #'jinx-correct)
+  (keymap-global-set "C-M-$" #'jinx-languages)
+  )
+
 ;;; ox-hugo
 
 (use-package ox-hugo

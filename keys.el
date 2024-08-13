@@ -378,17 +378,16 @@
 ; 'M-a' backward-sentence -> '(' evil-backward-sentence-begin
     (keymap-global-set "M-a" #'casual-avy-tmenu)
     ;; M-e
+
+    (require 'casual-bookmarks)
+    (keymap-set bookmark-bmenu-mode-map "C-;" #'casual-bookmarks-tmenu)
+    ;; (evil-define-key 'normal bookmark-bmenu-mode-map (kbd "J") 'bookmark-jump)
+    ;; (keymap-set bookmark-bmenu-mode-map "J" #'bookmark-jump)
+    ;; (easy-menu-add-item global-map '(menu-bar) casual-bookmarks-main-menu "Tools")
+    (require 'hl-line)
+    (add-hook 'bookmark-bmenu-mode-hook #'hl-line-mode)
     )
   )
 
-(when (locate-library "casual-bookmarks")
-  (require 'casual-bookmarks) ;; optional
-  (keymap-set bookmark-bmenu-mode-map "C-;" #'casual-bookmarks-tmenu)
-  ;; (evil-define-key 'normal bookmark-bmenu-mode-map (kbd "J") 'bookmark-jump)
-  (keymap-set bookmark-bmenu-mode-map "J" #'bookmark-jump)
-  (easy-menu-add-item global-map '(menu-bar) casual-bookmarks-main-menu "Tools")
-  (require 'hl-line)
-  (add-hook 'bookmark-bmenu-mode-hook #'hl-line-mode)
-  )
 
 ;;; keys.el ends here
