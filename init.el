@@ -238,7 +238,7 @@
   (org-startup-with-inline-images t)
   (org-image-actual-width '(450))
   (org-fold-catch-invisible-edits 'error)
-  (org-startup-with-latex-preview t)
+  (org-startup-with-latex-preview nil)
   (org-pretty-entities t)
   (org-use-sub-superscripts "{}")
   (org-id-link-to-org-use-id t))
@@ -396,7 +396,7 @@
   :config
   (openwith-mode t)
   :custom
-  (openwith-association nil))
+  (openwith-associations nil))
 
 ;; Fleeting notes
 
@@ -547,13 +547,16 @@
   :bind
   (("C-c w s p" . powerthesaurus-transient)))
 
-;; Writegood-Mode for buzzwords, passive writing and repeated word detection
+;; Writegood-Mode for weasel words, passive writing and repeated word detection
 
 (use-package writegood-mode
   :bind
-  (("C-c w s r" . writegood-reading-ease))
+  (("C-c w s r" . writegood-reading-ease)
+   ("C-c w s l" . writegood-grade-level))
   :hook
   (text-mode . writegood-mode))
+
+(use-package titlecase)
 
 ;; Abbreviations
 
@@ -686,11 +689,12 @@
 
 ;; Hide hidden files
 
-(use-package dired-hide-dotfiles
-  :hook
-  (dired-mode . dired-hide-dotfiles-mode)
-  :bind
-  (:map dired-mode-map ("." . dired-hide-dotfiles-mode)))
+(use-package dired
+  :ensure nil
+  :hook (dired-mode . dired-omit-mode)
+  :bind (:map dired-mode-map
+              ( "."     . dired-omit-mode))
+  :custom (dired-omit-files "^\\.[a-zA-Z0-9]+"))
 
 ;; Backup files
 
@@ -705,9 +709,6 @@
 (use-package recentf
   :config
   (recentf-mode t)
-  (run-at-time nil (* 5 60)
-               (lambda () (let ((save-silently t))
-                            (recentf-save-list))))
   :custom
   (recentf-max-saved-items 50)
   :bind
@@ -719,6 +720,22 @@
   :custom
   (bookmark-save-flag 1)
   :bind
-  ("C-x r D" . bookmark-delete))
-(put 'upcase-region 'disabled nil)
-(put 'downcase-region 'disabled nil)
+  ("C-x r d" . bookmark-delete))
+
+;; Image viewer
+
+(use-package emacs
+  :bind
+  ((:map image-mode-map
+         ("k" . image-kill-buffer)
+         ("<right>" . image-next-file)
+         ("<left>"  . image-previous-file))
+   (:map dired-mode-map
+         ("C-<return>" . image-dired-dired-display-external))))
+
+(use-package image-dired
+  :bind
+  (("C-c w I" . image-dired))
+  (:map image-dired-thumbnail-mode-map
+        ("C-<right>" . image-dired-display-next)
+        ("C-<left>" . image-dired-display-previous)))
