@@ -1,0 +1,4 @@
+#+title: Emacs Writing Studio (ko)
+#+author: Peter Prevos
+
+본 문서를 한글로 번역 한다.
