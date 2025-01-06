@@ -743,6 +743,11 @@
         ("C-<right>" . image-dired-display-next)
         ("C-<left>"  . image-dired-display-previous)))
 
+;; Load Extra
+
+(load-file (concat (file-name-as-directory user-emacs-directory) "evil.el"))
+(load-file (concat (file-name-as-directory user-emacs-directory) "extra.el"))
+
 ;; ADVANCED UNDOCUMENTED EXPORT SETTINGS FOR EWS
 
 ;; Use GraphViz for flow diagrams
