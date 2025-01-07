@@ -98,10 +98,8 @@
 
 ;;;; ccmenu with casual-suite
 
-(use-package casual-suite)
-
-(use-package google-this
-  :init (setq google-this-location-suffix "co.kr"))
+;; (use-package google-this
+;;   :init (setq google-this-location-suffix "co.kr"))
 
 (use-package webpaste
   :bind (("C-c C-p C-b" . webpaste-paste-buffer)
@@ -114,15 +112,23 @@
         '(("ko" . "en") ("en" . "ko"))))
 
 (use-package yasnippet)
-(use-package ace-window)
+;; (use-package ace-window)
 (use-package wgrep)
 (use-package transpose-frame)
 
-(add-to-list 'load-path (concat user-emacs-directory "ccmenu/"))
-(require 'ccmenu)
+(use-package casual-suite
+  :defer 2
+  :config
+  (add-to-list 'load-path (concat user-emacs-directory "ccmenu/"))
+  (require 'ccmenu))
 
 ;;;; Temporarly
 
+(modus-themes-toggle)
 (spacious-padding-mode -1)
+
+(menu-bar-mode 1)
+(tool-bar-mode 1)
+(tooltip-mode 1)
 
 ;;; extra.el ends here
